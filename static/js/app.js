@@ -81,6 +81,7 @@
       if(exchangeBtn) {
           exchangeBtn.addEventListener('click', () => {
              document.getElementById('modal-exchange').style.display = 'flex';
+             updateExchangeRate(); // Fetch rate when opening
           });
       }
 
@@ -114,6 +115,17 @@
           });
       }
 
+      // Exchange Auto-Calculation Listeners
+      const exAmountFrom = document.getElementById('exchange-amount-from');
+      const exRate = document.getElementById('exchange-rate');
+      const exCurrFrom = document.getElementById('exchange-currency-from');
+      const exCurrTo = document.getElementById('exchange-currency-to');
+
+      if(exAmountFrom) exAmountFrom.addEventListener('input', calculateExchange);
+      if(exRate) exRate.addEventListener('input', calculateExchange);
+      if(exCurrFrom) exCurrFrom.addEventListener('change', updateExchangeRate);
+      if(exCurrTo) exCurrTo.addEventListener('change', updateExchangeRate);
+
       document.getElementById('form-income').addEventListener('submit', handleIncomeSubmit);
       document.getElementById('form-expense').addEventListener('submit', handleExpenseSubmit);
       document.getElementById('form-piggybank').addEventListener('submit', handlePiggybankSubmit);
@@ -126,6 +138,56 @@
        document.getElementById('btn-close-settings').addEventListener('click', () => {
           document.getElementById('modal-settings').style.display = 'none';
        });
+    }
+
+    const currencyMap = {
+        '€': 'EUR',
+        '$': 'USD',
+        '£': 'GBP',
+        '¥': 'JPY'
+    };
+
+    async function updateExchangeRate() {
+        const from = document.getElementById('exchange-currency-from').value;
+        const to = document.getElementById('exchange-currency-to').value;
+        const rateInput = document.getElementById('exchange-rate');
+        
+        if (from === to) {
+            rateInput.value = 1;
+            calculateExchange();
+            return;
+        }
+
+        const fromCode = currencyMap[from] || 'EUR';
+        const toCode = currencyMap[to] || 'USD';
+
+        rateInput.parentElement.classList.add('opacity-50'); // visual feedback
+        
+        try {
+            const response = await fetch(`https://open.er-api.com/v6/latest/${fromCode}`);
+            const data = await response.json();
+            
+            if (data && data.rates && data.rates[toCode]) {
+                rateInput.value = data.rates[toCode].toFixed(4);
+            } else {
+                rateInput.value = 1.0000; // Fallback
+            }
+        } catch (e) {
+            console.error("Error fetching rates", e);
+            // Don't change value if fetch fails, user might have entered manually
+        } finally {
+            rateInput.parentElement.classList.remove('opacity-50');
+            calculateExchange();
+        }
+    }
+
+    function calculateExchange() {
+        const amountFrom = parseFloat(document.getElementById('exchange-amount-from').value) || 0;
+        const rate = parseFloat(document.getElementById('exchange-rate').value) || 0;
+        const amountToInput = document.getElementById('exchange-amount-to');
+        
+        const result = amountFrom * rate;
+        amountToInput.value = result.toFixed(2);
     }
     
     function openEditModal(transaction) {

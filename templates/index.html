@@ -120,9 +120,14 @@
               <input type="number" id="exchange-amount-from" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:outline-none transition-colors" placeholder="0.00" required>
               <select id="exchange-currency-from" class="w-full px-4 py-3 mt-2 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:outline-none transition-colors"> <option value="€">€ - Euro</option> <option value="$">$ - Dólar</option> </select>
           </div>
+          <div class="mb-4">
+              <label class="block text-gray-700 font-semibold mb-2">Tasa de cambio</label> 
+              <input type="number" id="exchange-rate" step="0.0001" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:outline-none transition-colors" placeholder="1.0000" required>
+              <p class="text-xs text-gray-500 mt-1">Se actualiza automáticamente</p>
+          </div>
           <div class="mb-6">
               <label class="block text-gray-700 font-semibold mb-2">Comprar (Destino)</label> 
-              <input type="number" id="exchange-amount-to" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:outline-none transition-colors" placeholder="0.00" required>
+              <input type="number" id="exchange-amount-to" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 focus:outline-none transition-colors" placeholder="0.00" readonly>
               <select id="exchange-currency-to" class="w-full px-4 py-3 mt-2 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:outline-none transition-colors"> <option value="$">$ - Dólar</option> <option value="€">€ - Euro</option> </select>
           </div>
        </div>

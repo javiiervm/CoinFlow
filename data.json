@@ -22,6 +22,26 @@
       "piggybank_name": "",
       "piggybank_goal": 0,
       "id": "f663ed48-babf-4ae1-8141-6acded372bd2"
+    },
+    {
+      "id": "e0b55db2-d745-4294-88dc-d453412028c8",
+      "type": "expense",
+      "concept": "Cambio a $",
+      "amount": 5,
+      "currency": "€",
+      "timestamp": "2026-02-02T08:18:12.228Z",
+      "piggybank_id": "",
+      "exchange_ref": true
+    },
+    {
+      "id": "bda9e7f6-f12d-42fa-85c9-54e7e53e86b6",
+      "type": "income",
+      "concept": "Cambio desde €",
+      "amount": 5.93,
+      "currency": "$",
+      "timestamp": "2026-02-02T08:18:12.228Z",
+      "piggybank_id": "",
+      "exchange_ref": true
     }
   ],
   "piggybanks": [
