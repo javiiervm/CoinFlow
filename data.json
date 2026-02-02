@@ -1,39 +1,4 @@
 {
-  "transactions": [
-    {
-      "amount": 50,
-      "concept": "Wuolah",
-      "currency": "€",
-      "edited": true,
-      "id": "d52429b1-abe0-4665-b750-80b4e8de38a4",
-      "piggybank_goal": 0,
-      "piggybank_id": "",
-      "piggybank_name": "",
-      "timestamp": "2026-03-03T11:00:00.000Z",
-      "type": "income"
-    },
-    {
-      "type": "income",
-      "concept": "Wuolah",
-      "amount": 20,
-      "currency": "€",
-      "timestamp": "2026-02-02T18:50:20.583Z",
-      "piggybank_id": "",
-      "piggybank_name": "",
-      "piggybank_goal": 0,
-      "id": "e902bb59-1fcb-4474-b525-34fcace9b29d"
-    },
-    {
-      "type": "income",
-      "concept": "Mama",
-      "amount": 30,
-      "currency": "€",
-      "timestamp": "2026-02-02T18:51:13.794Z",
-      "piggybank_id": "",
-      "piggybank_name": "",
-      "piggybank_goal": 0,
-      "id": "adb38fea-3317-4301-9742-c2a7a60afacb"
-    }
-  ],
+  "transactions": [],
   "piggybanks": []
 }
