@@ -957,7 +957,7 @@ let transactions = [];
         let subText = `Objetivo: ${piggybank.goal.toFixed(2)}${piggybank.currency || '€'}`;
         let mainValue = `${displayCurrent.toFixed(2)}${piggybank.currency || '€'}`;
         let barColor = isCompleted ? 'var(--color-income)' : 'var(--bg-header)';
-        let badge = '';
+        let badge = '<span class="text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 px-2 py-0.5 rounded-full ml-2">Ahorro</span>';
 
         if (isExpenseTracker) {
             displayCurrent = piggybank.spent;
