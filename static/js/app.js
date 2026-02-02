@@ -682,6 +682,7 @@ let transactions = [];
         e.preventDefault();
         const pbId = document.getElementById('withdraw-piggybank-id').value;
         const amount = parseFloat(document.getElementById('withdraw-amount').value);
+        const subject = document.getElementById('withdraw-subject').value.trim();
         const pb = piggybanks.get(pbId);
         
         if (!pb) return;
@@ -691,10 +692,18 @@ let transactions = [];
         
         const timestamp = new Date().toISOString();
         
+        let expenseConcept = 'Retirada de fondos';
+        let incomeConcept = `Reintegro desde ${pb.name}`;
+
+        if (subject) {
+            expenseConcept += `: ${subject}`;
+            incomeConcept += `: ${subject}`;
+        }
+        
         // 1. Expense from Piggybank (Reduce PB balance)
         const res1 = await apiCall('/api/transaction', 'POST', {
              type: 'expense',
-             concept: 'Retirada de fondos',
+             concept: expenseConcept,
              amount: amount,
              currency: pb.currency,
              timestamp: timestamp,
@@ -706,7 +715,7 @@ let transactions = [];
         // 2. Income to Global (Increase Global balance)
         const res2 = await apiCall('/api/transaction', 'POST', {
              type: 'income',
-             concept: `Reintegro desde ${pb.name}`,
+             concept: incomeConcept,
              amount: amount,
              currency: pb.currency,
              timestamp: timestamp,
