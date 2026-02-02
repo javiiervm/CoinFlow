@@ -47,7 +47,50 @@ def add_transaction():
     required = ['type', 'amount', 'currency']
     if not all(k in new_transaction for k in required):
         return jsonify({'success': False, 'message': 'Missing fields'}), 400
+
+    # Handle "Create Piggybank from Expense" logic
+    if new_transaction.get('create_piggybank') and new_transaction.get('new_piggybank_name'):
+        new_pb_id = str(uuid.uuid4())
+        new_pb = {
+            'id': new_pb_id,
+            'concept': new_transaction['new_piggybank_name'],
+            'amount': new_transaction['amount'], # Initial goal = expense amount
+            'currency': new_transaction['currency'],
+            'timestamp': new_transaction.get('timestamp'),
+            'created_from_expense': True
+        }
+        data['piggybanks'].append(new_pb)
         
+        # Link transaction to this new piggybank
+        new_transaction['piggybank_id'] = new_pb_id
+        new_transaction['piggybank_name'] = new_pb['concept']
+        new_transaction['piggybank_goal'] = new_pb['amount']
+        
+        # Remove temporary fields so they don't pollute transaction data
+        del new_transaction['create_piggybank']
+        del new_transaction['new_piggybank_name']
+        
+    # Handle "Add to existing Expense-Type Piggybank" logic
+    elif new_transaction.get('piggybank_id'):
+        pb_id = new_transaction['piggybank_id']
+        # Find the piggybank
+        for i, pb in enumerate(data['piggybanks']):
+            if pb['id'] == pb_id:
+                # If it's a dynamic expense tracker, update the goal
+                if pb.get('created_from_expense') and new_transaction['type'] == 'expense':
+                    pb['amount'] += new_transaction['amount']
+                    data['piggybanks'][i] = pb
+                    
+                    # Update the transaction's snapshot of the goal
+                    new_transaction['piggybank_goal'] = pb['amount']
+                    
+                    # Optional: Update ALL other transactions linked to this PB to reflect new goal?
+                    # The update_piggybank route does it. Let's do it for consistency.
+                    for t in data['transactions']:
+                        if t.get('piggybank_id') == pb_id:
+                            t['piggybank_goal'] = pb['amount']
+                break
+
     data['transactions'].append(new_transaction)
     save_data(data)
     return jsonify({'success': True, 'transaction': new_transaction})
@@ -63,8 +106,31 @@ def update_transaction():
     # Find and update
     for i, t in enumerate(data['transactions']):
         if t['id'] == updated_transaction['id']:
-            # Mark as edited if concept/amount changed (simple check)
-            # Frontend already sends 'edited': true, but we can enforce it
+            # Handle Piggybank Goal updates for 'created_from_expense' types
+            pb_id = t.get('piggybank_id')
+            if pb_id and t['type'] == 'expense':
+                # Find the piggybank
+                pb_index = next((idx for idx, p in enumerate(data['piggybanks']) if p['id'] == pb_id), None)
+                if pb_index is not None:
+                    pb = data['piggybanks'][pb_index]
+                    if pb.get('created_from_expense'):
+                        old_amount = t['amount']
+                        new_amount = updated_transaction['amount']
+                        diff = new_amount - old_amount
+                        
+                        if diff != 0:
+                            pb['amount'] += diff
+                            data['piggybanks'][pb_index] = pb
+                            
+                            # Update goal in current transaction object to be saved
+                            updated_transaction['piggybank_goal'] = pb['amount']
+                            
+                            # Update all other transactions linked to this PB
+                            for other_t in data['transactions']:
+                                if other_t.get('piggybank_id') == pb_id and other_t['id'] != t['id']:
+                                    other_t['piggybank_goal'] = pb['amount']
+
+            # Mark as edited
             updated_transaction['edited'] = True
             data['transactions'][i] = updated_transaction
             save_data(data)
@@ -78,10 +144,25 @@ def delete_transaction():
     req = request.json
     t_id = req.get('id')
     
-    initial_len = len(data['transactions'])
-    data['transactions'] = [t for t in data['transactions'] if t['id'] != t_id]
+    transaction_to_delete = next((t for t in data['transactions'] if t['id'] == t_id), None)
     
-    if len(data['transactions']) < initial_len:
+    if transaction_to_delete:
+        # Check if we need to update a Piggybank (Expense Tracker type)
+        pb_id = transaction_to_delete.get('piggybank_id')
+        if pb_id and transaction_to_delete['type'] == 'expense':
+             for i, pb in enumerate(data['piggybanks']):
+                if pb['id'] == pb_id and pb.get('created_from_expense'):
+                    # Reduce the goal/amount
+                    pb['amount'] = max(0, pb['amount'] - transaction_to_delete['amount'])
+                    data['piggybanks'][i] = pb
+                    
+                    # Update all transactions linked to this PB with new goal
+                    for t in data['transactions']:
+                        if t.get('piggybank_id') == pb_id:
+                            t['piggybank_goal'] = pb['amount']
+                    break
+
+        data['transactions'] = [t for t in data['transactions'] if t['id'] != t_id]
         save_data(data)
         return jsonify({'success': True})
     

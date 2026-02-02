@@ -179,8 +179,27 @@
       <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Divisa</label> 
           <select id="expense-currency" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-red-500"> <option value="€">€ - Euro</option> <option value="$">$ - Dólar</option> </select>
       </div>
-      <div class="mb-6"><label class="block theme-text-secondary font-semibold mb-2">¿Pagar desde una hucha?</label> 
-          <select id="expense-piggybank" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-red-500"> <option value="">No, del saldo global</option> </select>
+      
+      <div class="flex items-center gap-3 mb-6 p-3 rounded-xl theme-bg-primary bg-opacity-50 border theme-border">
+          <input type="checkbox" id="expense-external" class="w-5 h-5 accent-red-500 rounded focus:ring-red-500 cursor-pointer">
+          <label for="expense-external" class="theme-text-primary text-sm font-medium cursor-pointer select-none">
+              Gasto externo <span class="block text-xs theme-text-secondary font-normal">No se descuenta del saldo total</span>
+          </label>
+      </div>
+
+      <div class="mb-6">
+          <label class="block theme-text-secondary font-semibold mb-2">Asociar a una hucha</label> 
+          <select id="expense-piggybank" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-red-500 mb-3"> <option value="">No, gasto general</option> </select>
+          
+          <div class="flex items-center gap-2 mb-3">
+              <input type="checkbox" id="expense-create-piggybank" class="w-5 h-5 accent-red-500 rounded focus:ring-red-500">
+              <label for="expense-create-piggybank" class="theme-text-secondary text-sm select-none cursor-pointer">Crear nueva hucha vinculada</label>
+          </div>
+          
+          <div id="expense-new-piggybank-container" class="hidden animate-fade-in">
+               <input type="text" id="expense-new-piggybank-name" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-red-500" placeholder="Nombre de la nueva hucha">
+               <p class="text-xs theme-text-secondary mt-1 ml-1">El objetivo se actualizará automáticamente con cada gasto.</p>
+          </div>
       </div>
       <div class="flex gap-3">
           <button type="submit" class="flex-1 theme-btn-expense font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Añadir </button> 
@@ -195,12 +214,44 @@
     <div class="theme-bg-secondary rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 animate-slide-in theme-border border">
      <h3 class="text-3xl font-bold theme-text-primary mb-6">🐷 Nueva Hucha</h3>
      <form id="form-piggybank">
+      <div class="mb-4">
+          <label class="block theme-text-secondary font-semibold mb-2">Tipo de Hucha</label>
+          <div class="flex gap-4">
+              <label class="flex items-center cursor-pointer">
+                  <input type="radio" name="piggybank-type" value="savings" checked class="w-5 h-5 accent-purple-500">
+                  <span class="ml-2 theme-text-primary">Ahorro</span>
+              </label>
+              <label class="flex items-center cursor-pointer">
+                  <input type="radio" name="piggybank-type" value="budget" class="w-5 h-5 accent-purple-500">
+                  <span class="ml-2 theme-text-primary">Presupuesto</span>
+              </label>
+          </div>
+      </div>
+      
       <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Nombre</label> 
           <input type="text" id="piggybank-name" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" placeholder="Ej: Vacaciones" required>
       </div>
-      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Objetivo</label> 
-          <input type="number" id="piggybank-goal" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" placeholder="0.00" required>
+      
+      <!-- Savings Fields -->
+      <div id="piggybank-savings-fields">
+          <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Objetivo</label> 
+              <input type="number" id="piggybank-goal" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" placeholder="0.00">
+          </div>
       </div>
+
+      <!-- Budget Fields -->
+      <div id="piggybank-budget-fields" class="hidden">
+          <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Cantidad Inicial</label> 
+              <input type="number" id="piggybank-start-amount" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" placeholder="0.00">
+          </div>
+          <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Origen de los fondos</label> 
+              <select id="piggybank-source" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500">
+                  <option value="new">Ingreso nuevo (Externo)</option>
+                  <option value="balance">Descontar del saldo actual</option>
+              </select>
+          </div>
+      </div>
+
       <div class="mb-6"><label class="block theme-text-secondary font-semibold mb-2">Divisa</label> 
           <select id="piggybank-currency" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500"> <option value="€">€ - Euro</option> <option value="$">$ - Dólar</option> </select>
       </div>
@@ -208,7 +259,27 @@
             </div>
            </form>
           </div>
-         </div><!-- Modal for Edit Piggybank -->
+         </div>
+         
+   <!-- Modal for Withdraw -->
+   <div id="modal-withdraw" class="fixed inset-0 bg-black/50 modal-backdrop hidden items-center justify-center z-50">
+    <div class="theme-bg-secondary rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 animate-slide-in theme-border border">
+     <h3 class="text-3xl font-bold theme-text-primary mb-6">💸 Retirar Fondos</h3>
+     <p class="theme-text-secondary mb-4">Mover dinero de la hucha al saldo global.</p>
+     <form id="form-withdraw">
+      <input type="hidden" id="withdraw-piggybank-id">
+      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Cantidad</label> 
+          <input type="number" id="withdraw-amount" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" placeholder="0.00" required>
+      </div>
+      <div class="flex gap-3">
+          <button type="submit" class="flex-1 theme-btn-primary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Retirar </button> 
+          <button type="button" id="btn-cancel-withdraw" class="flex-1 theme-btn-secondary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cancelar </button>
+      </div>
+     </form>
+    </div>
+   </div>
+
+   <!-- Modal for Edit Piggybank -->
          <div id="modal-piggybank-edit" class="fixed inset-0 bg-black/50 modal-backdrop hidden items-center justify-center z-50">
           <div class="theme-bg-secondary rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 animate-slide-in theme-border border">
            <h3 class="text-3xl font-bold theme-text-primary mb-6">✏️ Editar Hucha</h3>
@@ -272,6 +343,14 @@
       <div class="mb-6"><label id="edit-piggybank-label" class="block theme-text-secondary font-semibold mb-2">Hucha</label> 
           <select id="edit-piggybank" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500"> <option value="">Saldo global</option> </select>
       </div>
+      
+      <div id="edit-external-container" class="hidden flex items-center gap-3 mb-6 p-3 rounded-xl theme-bg-primary bg-opacity-50 border theme-border">
+          <input type="checkbox" id="edit-external" class="w-5 h-5 accent-blue-500 rounded focus:ring-blue-500 cursor-pointer">
+          <label for="edit-external" class="theme-text-primary text-sm font-medium cursor-pointer select-none">
+              Gasto externo <span class="block text-xs theme-text-secondary font-normal">No se descuenta del saldo total</span>
+          </label>
+      </div>
+
       <div class="flex gap-3">
           <button type="submit" class="flex-1 theme-btn-primary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Guardar </button> 
           <button type="button" id="btn-cancel-edit" class="flex-1 theme-btn-secondary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cancelar </button>

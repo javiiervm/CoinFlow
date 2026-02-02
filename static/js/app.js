@@ -1,5 +1,4 @@
-
-    let transactions = [];
+let transactions = [];
     let piggybanks = new Map();
     
     // API Helper
@@ -169,7 +168,30 @@
       document.getElementById('btn-add-expense').addEventListener('click', () => {
         updatePiggybankSelects();
         document.getElementById('modal-expense').style.display = 'flex';
+        // Reset state on open
+        document.getElementById('expense-create-piggybank').checked = false;
+        document.getElementById('expense-new-piggybank-container').classList.add('hidden');
+        document.getElementById('expense-piggybank').disabled = false;
+        document.getElementById('expense-external').checked = false;
       });
+
+      // New Listener for Expense Piggybank Creation Toggle
+      const createPbCheckbox = document.getElementById('expense-create-piggybank');
+      if (createPbCheckbox) {
+          createPbCheckbox.addEventListener('change', (e) => {
+              const container = document.getElementById('expense-new-piggybank-container');
+              const select = document.getElementById('expense-piggybank');
+              
+              if (e.target.checked) {
+                  container.classList.remove('hidden');
+                  select.disabled = true;
+                  select.value = "";
+              } else {
+                  container.classList.add('hidden');
+                  select.disabled = false;
+              }
+          });
+      }
       
       document.getElementById('btn-create-piggybank').addEventListener('click', () => {
         document.getElementById('modal-piggybank').style.display = 'flex';
@@ -256,6 +278,42 @@
       
       const formExchange = document.getElementById('form-exchange');
       if(formExchange) formExchange.addEventListener('submit', handleExchangeSubmit);
+
+      // Listeners for Piggybank Type Toggle
+      document.querySelectorAll('input[name="piggybank-type"]').forEach(radio => {
+          radio.addEventListener('change', (e) => {
+              const type = e.target.value;
+              const savingsFields = document.getElementById('piggybank-savings-fields');
+              const budgetFields = document.getElementById('piggybank-budget-fields');
+              const goalInput = document.getElementById('piggybank-goal');
+              const startAmountInput = document.getElementById('piggybank-start-amount');
+
+              if (type === 'savings') {
+                  savingsFields.classList.remove('hidden');
+                  budgetFields.classList.add('hidden');
+                  goalInput.required = true;
+                  startAmountInput.required = false;
+              } else {
+                  savingsFields.classList.add('hidden');
+                  budgetFields.classList.remove('hidden');
+                  goalInput.required = false;
+                  startAmountInput.required = true;
+              }
+          });
+      });
+
+      // Withdraw Modal Listeners
+      const btnCancelWithdraw = document.getElementById('btn-cancel-withdraw');
+      if (btnCancelWithdraw) {
+          btnCancelWithdraw.addEventListener('click', () => {
+              document.getElementById('modal-withdraw').style.display = 'none';
+              document.getElementById('form-withdraw').reset();
+          });
+      }
+      const formWithdraw = document.getElementById('form-withdraw');
+      if (formWithdraw) {
+          formWithdraw.addEventListener('submit', handleWithdrawSubmit);
+      }
     }
 
     const currencyMap = {
@@ -312,13 +370,19 @@
       
       const modalTitle = document.getElementById('edit-modal-title');
       const piggybankLabel = document.getElementById('edit-piggybank-label');
+      const externalContainer = document.getElementById('edit-external-container');
+      const externalCheckbox = document.getElementById('edit-external');
       
       if (transaction.type === 'income') {
         modalTitle.textContent = '✏️ Editar Ingreso';
         piggybankLabel.textContent = '¿Destinar a una hucha?';
+        externalContainer.classList.add('hidden');
+        externalCheckbox.checked = false;
       } else {
         modalTitle.textContent = '✏️ Editar Gasto';
         piggybankLabel.textContent = '¿Pagar desde una hucha?';
+        externalContainer.classList.remove('hidden');
+        externalCheckbox.checked = !!transaction.external;
       }
       
       document.getElementById('edit-concept').value = transaction.concept;
@@ -364,6 +428,7 @@
       const currency = document.getElementById('edit-currency').value;
       const dateValue = document.getElementById('edit-date').value;
       const piggybankId = document.getElementById('edit-piggybank').value;
+      const isExternal = document.getElementById('edit-external').checked;
       
       const submitButton = e.target.querySelector('button[type="submit"]');
       submitButton.disabled = true;
@@ -387,6 +452,7 @@
         concept,
         amount,
         currency,
+        external: isExternal,
         timestamp: dateObj.toISOString(),
         piggybank_id: piggybankId || '',
         piggybank_name: piggybankName,
@@ -463,8 +529,17 @@
       const concept = document.getElementById('expense-concept').value;
       const amount = parseFloat(document.getElementById('expense-amount').value);
       const currency = document.getElementById('expense-currency').value;
-      const piggybankId = document.getElementById('expense-piggybank').value;
+      const isExternal = document.getElementById('expense-external').checked;
       
+      const createNew = document.getElementById('expense-create-piggybank').checked;
+      let piggybankId = document.getElementById('expense-piggybank').value;
+      const newPiggybankName = document.getElementById('expense-new-piggybank-name').value;
+      
+      if (createNew && !newPiggybankName.trim()) {
+          showToast('Debes indicar un nombre para la nueva hucha', 'error');
+          return;
+      }
+
       const submitButton = e.target.querySelector('button[type="submit"]');
       submitButton.disabled = true;
       submitButton.textContent = 'Añadiendo...';
@@ -472,7 +547,8 @@
       let piggybankName = '';
       let piggybankGoal = 0;
       
-      if (piggybankId) {
+      // If NOT creating new, look up existing info
+      if (!createNew && piggybankId) {
         const piggybank = piggybanks.get(piggybankId);
         if (piggybank) {
           piggybankName = piggybank.name;
@@ -480,16 +556,25 @@
         }
       }
       
-      const result = await apiCall('/api/transaction', 'POST', {
+      const payload = {
         type: 'expense',
         concept,
         amount,
         currency,
+        external: isExternal,
         timestamp: new Date().toISOString(),
         piggybank_id: piggybankId || '',
         piggybank_name: piggybankName,
         piggybank_goal: piggybankGoal
-      });
+      };
+
+      if (createNew) {
+          payload.create_piggybank = true;
+          payload.new_piggybank_name = newPiggybankName;
+          // piggybank_id will be ignored/overwritten by backend
+      }
+      
+      const result = await apiCall('/api/transaction', 'POST', payload);
       
       submitButton.disabled = false;
       submitButton.textContent = 'Añadir';
@@ -497,6 +582,13 @@
       if (result && result.success) {
         document.getElementById('modal-expense').style.display = 'none';
         document.getElementById('form-expense').reset();
+        
+        // Reset specific UI states
+        document.getElementById('expense-create-piggybank').checked = false;
+        document.getElementById('expense-external').checked = false;
+        document.getElementById('expense-new-piggybank-container').classList.add('hidden');
+        document.getElementById('expense-piggybank').disabled = false;
+        
         showToast('Gasto añadido correctamente', 'success');
         loadData();
       } else {
@@ -508,33 +600,132 @@
       e.preventDefault();
       
       const name = document.getElementById('piggybank-name').value;
-      const goal = parseFloat(document.getElementById('piggybank-goal').value);
       const currency = document.getElementById('piggybank-currency').value;
+      const type = document.querySelector('input[name="piggybank-type"]:checked').value;
       
       const submitButton = e.target.querySelector('button[type="submit"]');
       submitButton.disabled = true;
       submitButton.textContent = 'Creando...';
       
+      let goal = 0;
+      let initialAmount = 0;
+      let source = '';
+
+      if (type === 'savings') {
+          goal = parseFloat(document.getElementById('piggybank-goal').value);
+      } else {
+          initialAmount = parseFloat(document.getElementById('piggybank-start-amount').value);
+          source = document.getElementById('piggybank-source').value;
+          goal = initialAmount; // Logical goal for display or irrelevant
+      }
+      
+      const pbId = Date.now().toString();
+      
+      // Create Piggybank Definition
       const result = await apiCall('/api/piggybank', 'POST', {
-        id: Date.now().toString(),
+        id: pbId,
         concept: name,
         amount: goal,
         currency,
+        type: type, // 'savings' or 'budget'
         timestamp: new Date().toISOString()
       });
       
-      submitButton.disabled = false;
-      submitButton.textContent = 'Crear';
-      
       if (result && result.success) {
+          // If Budget type, create initial transactions
+          if (type === 'budget') {
+              const timestamp = new Date().toISOString();
+              
+              // 1. Initial Deposit to Piggybank
+              await apiCall('/api/transaction', 'POST', {
+                  type: 'income',
+                  concept: 'Saldo Inicial',
+                  amount: initialAmount,
+                  currency: currency,
+                  timestamp: timestamp,
+                  piggybank_id: pbId,
+                  piggybank_name: name,
+                  piggybank_goal: goal
+              });
+              
+              // 2. If sourced from balance, deduct from Global
+              if (source === 'balance') {
+                   await apiCall('/api/transaction', 'POST', {
+                      type: 'expense',
+                      concept: `Asignación a presupuesto: ${name}`,
+                      amount: initialAmount,
+                      currency: currency,
+                      timestamp: timestamp,
+                      piggybank_id: '', // Global
+                  });
+              }
+          }
+
         document.getElementById('modal-piggybank').style.display = 'none';
         document.getElementById('form-piggybank').reset();
+        // Reset visibility to default
+        document.getElementById('piggybank-savings-fields').classList.remove('hidden');
+        document.getElementById('piggybank-budget-fields').classList.add('hidden');
+        document.querySelector('input[name="piggybank-type"][value="savings"]').checked = true;
+        
         showToast('Hucha creada correctamente', 'success');
         loadData();
       } else {
         showToast('Error al crear la hucha', 'error');
       }
+      
+      submitButton.disabled = false;
+      submitButton.textContent = 'Crear';
     }
+
+    async function handleWithdrawSubmit(e) {
+        e.preventDefault();
+        const pbId = document.getElementById('withdraw-piggybank-id').value;
+        const amount = parseFloat(document.getElementById('withdraw-amount').value);
+        const pb = piggybanks.get(pbId);
+        
+        if (!pb) return;
+        
+        const btn = e.target.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        
+        const timestamp = new Date().toISOString();
+        
+        // 1. Expense from Piggybank (Reduce PB balance)
+        const res1 = await apiCall('/api/transaction', 'POST', {
+             type: 'expense',
+             concept: 'Retirada de fondos',
+             amount: amount,
+             currency: pb.currency,
+             timestamp: timestamp,
+             piggybank_id: pbId,
+             piggybank_name: pb.name,
+             piggybank_goal: pb.goal
+        });
+        
+        // 2. Income to Global (Increase Global balance)
+        const res2 = await apiCall('/api/transaction', 'POST', {
+             type: 'income',
+             concept: `Reintegro desde ${pb.name}`,
+             amount: amount,
+             currency: pb.currency,
+             timestamp: timestamp,
+             piggybank_id: ''
+        });
+        
+        if (res1.success && res2.success) {
+            document.getElementById('modal-withdraw').style.display = 'none';
+            document.getElementById('form-withdraw').reset();
+            showToast('Fondos retirados correctamente', 'success');
+            loadData();
+        } else {
+            showToast('Error al retirar fondos', 'error');
+        }
+        btn.disabled = false;
+    }
+
+    // ... (renderPiggybanks update below) ...
+
 
     async function handleExchangeSubmit(e) {
       e.preventDefault();
@@ -656,7 +847,7 @@
       const dollarBalance = { income: 0, expense: 0 };
       
       const incomes = transactions.filter(t => t.type === 'income');
-      const expenses = transactions.filter(t => t.type === 'expense');
+      const expenses = transactions.filter(t => t.type === 'expense' && !t.external);
       
       incomes.forEach(income => {
         const currency = income.currency || '€';
@@ -671,7 +862,7 @@
         }
       });
       
-      piggybanks.forEach(pb => {
+      piggybanks.forEach((pb, id) => {
           if (pb.current > pb.goal) {
               const overflow = pb.current - pb.goal;
               if (pb.currency === '€') euroBalance.income += overflow;
@@ -718,7 +909,16 @@
              
              let rawCurrent = totalIncome - totalExpense;
              pb.current = rawCurrent; 
-             pb.completed = rawCurrent >= pb.goal;
+             pb.spent = totalExpense;
+             pb.totalIncome = totalIncome;
+             
+             if (pb.created_from_expense) {
+                 pb.completed = false; 
+             } else if (pb.type === 'budget') {
+                 pb.completed = rawCurrent <= 0.01;
+             } else {
+                 pb.completed = rawCurrent >= pb.goal;
+             }
         });
         
         renderPiggybanks();
@@ -733,10 +933,6 @@
 
       if (filteredPiggybanks.length === 0) {
         container.innerHTML = '';
-        // Only show "No piggybanks" message if we really have none (empty state), 
-        // or maybe a "No results found" if filtered?
-        // For now using the existing message but adapting if needed.
-        // If we have data but filter hid it, we might want a different message.
         if (piggybanks.size > 0) {
              noPiggybanks.innerHTML = '<p class="text-xl">No se encontraron huchas con estos filtros.</p>';
              noPiggybanks.style.display = 'block';
@@ -752,18 +948,78 @@
       
       filteredPiggybanks.forEach((piggybank) => {
         const id = piggybank.id;
-        const displayCurrent = Math.min(piggybank.current, piggybank.goal);
-        const percentage = (displayCurrent / piggybank.goal) * 100;
-        const isCompleted = piggybank.completed;
+        const isExpenseTracker = piggybank.created_from_expense;
+        const isBudget = piggybank.type === 'budget';
+        
+        let displayCurrent = Math.min(piggybank.current, piggybank.goal);
+        let percentage = (displayCurrent / piggybank.goal) * 100;
+        let isCompleted = piggybank.completed;
+        let subText = `Objetivo: ${piggybank.goal.toFixed(2)}${piggybank.currency || '€'}`;
+        let mainValue = `${displayCurrent.toFixed(2)}${piggybank.currency || '€'}`;
+        let barColor = isCompleted ? 'var(--color-income)' : 'var(--bg-header)';
+        let badge = '';
+
+        if (isExpenseTracker) {
+            displayCurrent = piggybank.spent;
+            percentage = 100;
+            isCompleted = false;
+            subText = `Total Acumulado`;
+            mainValue = `${piggybank.goal.toFixed(2)}${piggybank.currency || '€'}`;
+            barColor = 'var(--color-expense)';
+            badge = '<span class="text-xs bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 px-2 py-0.5 rounded-full ml-2">Gasto</span>';
+        } else if (isBudget) {
+            displayCurrent = piggybank.current;
+            const baseline = piggybank.totalIncome > 0 ? piggybank.totalIncome : 1;
+            percentage = Math.max(0, (displayCurrent / baseline) * 100);
+            
+            subText = `Disponible`;
+            mainValue = `${displayCurrent.toFixed(2)}${piggybank.currency || '€'}`;
+            badge = '<span class="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-2 py-0.5 rounded-full ml-2">Presupuesto</span>';
+            
+            if (displayCurrent < 0) {
+                mainValue = `<span class="text-red-500">${displayCurrent.toFixed(2)}${piggybank.currency || '€'}</span>`;
+                subText = `<span class="text-red-500 font-bold">¡En números rojos!</span>`;
+                barColor = 'red';
+                percentage = 100;
+            } else {
+                barColor = 'var(--color-income)';
+            }
+        }
         
         const card = document.createElement('div');
         card.className = 'piggybank-card theme-bg-secondary rounded-2xl shadow-lg p-6 relative overflow-hidden theme-border border transition-colors duration-300';
         
+        let footerActions = '';
+        
+        if (isCompleted && !isBudget && !isExpenseTracker) {
+             footerActions = `
+                <div class="mt-4 text-center">
+                    <p class="theme-text-income font-semibold mb-2">¡Objetivo completado! 🎉</p>
+                    <button class="btn-spend-piggybank w-full py-2 px-4 rounded-xl theme-btn-expense font-semibold text-sm shadow-md transition-transform hover:scale-105" data-id="${id}">
+                   💸 Gastar hucha
+                </button>
+            </div>`;
+        } else if (isBudget) {
+             footerActions = `
+                <div class="mt-4 flex gap-2">
+                    <button class="btn-refill-piggybank flex-1 py-2 px-2 rounded-xl theme-btn-income font-semibold text-sm shadow-md transition-transform hover:scale-105" data-id="${id}">
+                       📥 Rellenar
+                    </button>
+                    ${piggybank.current > 0 ? `
+                    <button class="btn-withdraw-piggybank flex-1 py-2 px-2 rounded-xl theme-btn-primary font-semibold text-sm shadow-md transition-transform hover:scale-105" data-id="${id}">
+                       📤 Retirar
+                    </button>` : ''}
+                </div>`;
+        }
+        
         card.innerHTML = `
           <div class="flex justify-between items-start mb-4">
             <div class="flex-1 mr-2">
-              <h3 class="text-xl font-bold theme-text-primary truncate" title="${piggybank.name}">${piggybank.name}</h3>
-              <p class="text-sm theme-text-secondary">Objetivo: ${piggybank.goal.toFixed(2)}${piggybank.currency || '€'}</p>
+              <h3 class="text-xl font-bold theme-text-primary truncate" title="${piggybank.name}">
+                ${piggybank.name} 
+                ${badge}
+              </h3>
+              <p class="text-sm theme-text-secondary">${subText}</p>
             </div>
             <div class="flex gap-2 shrink-0">
                  <button class="edit-piggybank theme-text-secondary hover:text-blue-500 transition-colors" data-id="${id}" title="Editar">✏️</button>
@@ -773,22 +1029,15 @@
           
           <div class="mb-3">
             <div class="flex justify-between text-sm mb-1">
-              <span class="font-semibold theme-text-primary">${displayCurrent.toFixed(2)}${piggybank.currency || '€'}</span>
-              <span class="theme-text-secondary">${percentage.toFixed(0)}%</span>
+              <span class="font-semibold theme-text-primary">${mainValue}</span>
+              ${!isExpenseTracker ? `<span class="theme-text-secondary">${percentage.toFixed(0)}%</span>` : ''}
             </div>
             <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
-              <div class="progress-bar h-full rounded-full transition-all ${isCompleted ? 'theme-bg-income' : 'theme-bg-header'}" style="width: ${Math.min(percentage, 100)}%; background-color: ${isCompleted ? 'var(--color-income)' : 'var(--bg-header)'}"></div>
+              <div class="progress-bar h-full rounded-full transition-all" style="width: ${Math.min(percentage, 100)}%; background-color: ${barColor}"></div>
             </div>
           </div>
           
-          ${isCompleted ? `
-            <div class="mt-4 text-center">
-                <p class="theme-text-income font-semibold mb-2">¡Objetivo completado! 🎉</p>
-                <button class="btn-spend-piggybank w-full py-2 px-4 rounded-xl theme-btn-expense font-semibold text-sm shadow-md transition-transform hover:scale-105" data-id="${id}">
-                   💸 Gastar hucha
-                </button>
-            </div>
-          ` : ''}
+          ${footerActions}
         `;
         
         container.appendChild(card);
@@ -814,7 +1063,6 @@
         });
       });
 
-      // Edit Listeners
       document.querySelectorAll('.edit-piggybank').forEach(btn => {
         btn.addEventListener('click', (e) => {
              const id = e.target.dataset.id;
@@ -828,7 +1076,6 @@
         });
       });
 
-      // Spend Listeners
       document.querySelectorAll('.btn-spend-piggybank').forEach(btn => {
           btn.addEventListener('click', async (e) => {
               const id = e.target.dataset.id;
@@ -855,6 +1102,24 @@
                       showToast('Error al registrar el gasto', 'error');
                   }
               }
+          });
+      });
+
+      // Budget Specific Listeners
+      document.querySelectorAll('.btn-withdraw-piggybank').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+               const id = e.target.dataset.id;
+               document.getElementById('withdraw-piggybank-id').value = id;
+               document.getElementById('modal-withdraw').style.display = 'flex';
+          });
+      });
+
+      document.querySelectorAll('.btn-refill-piggybank').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+               const id = e.target.dataset.id;
+               document.getElementById('income-piggybank').value = id;
+               document.getElementById('modal-income').style.display = 'flex';
+               document.getElementById('income-concept').value = "Relleno de presupuesto";
           });
       });
     }
@@ -913,17 +1178,18 @@
       } else {
         noExpenses.style.display = 'none';
         expenseList.innerHTML = filteredExpenses.map(expense => `
-          <div class="transaction-item theme-bg-secondary border-l-4 rounded-xl p-4 flex justify-between items-center mb-3 theme-border border shadow-sm" style="border-left-color: var(--color-expense);">
+          <div class="transaction-item theme-bg-secondary border-l-4 rounded-xl p-4 flex justify-between items-center mb-3 theme-border border shadow-sm" style="border-left-color: ${expense.external ? 'gray' : 'var(--color-expense)'};">
             <div>
               <p class="font-semibold theme-text-primary">
                 ${expense.concept}
                 ${expense.edited ? '<span class="text-xs theme-btn-primary text-white px-2 py-0.5 rounded-full ml-2">Editado</span>' : ''}
+                ${expense.external ? '<span class="text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full ml-2">Externo</span>' : ''}
               </p>
               ${expense.piggybank_name ? `<p class="text-xs theme-text-secondary">← ${expense.piggybank_name}</p>` : ''}
               <p class="text-xs theme-text-secondary">${new Date(expense.timestamp).toLocaleDateString()}</p>
             </div>
             <div class="text-right">
-              <p class="font-bold theme-text-expense text-lg">-${expense.amount.toFixed(2)}${expense.currency || '€'}</p>
+              <p class="font-bold text-lg" style="color: ${expense.external ? 'var(--text-secondary)' : 'var(--color-expense)'}">-${expense.amount.toFixed(2)}${expense.currency || '€'}</p>
               <div class="flex gap-2 justify-end mt-1">
                 <button class="edit-transaction theme-text-secondary hover:text-blue-500 text-sm" data-id="${expense.id}">Editar</button>
                 <button class="delete-transaction theme-text-secondary hover:text-red-500 text-sm" data-id="${expense.id}">Eliminar</button>
@@ -968,18 +1234,31 @@
       const incomeSelect = document.getElementById('income-piggybank');
       const expenseSelect = document.getElementById('expense-piggybank');
       
+      // Preserve selection if possible? No, usually resets on open.
+      const currentIncomeVal = incomeSelect.value;
+      const currentExpenseVal = expenseSelect.value;
+
       incomeSelect.innerHTML = '<option value="">No, al saldo global</option>';
-      expenseSelect.innerHTML = '<option value="">No, del saldo global</option>';
+      expenseSelect.innerHTML = '<option value="">No, gasto general</option>';
       
       piggybanks.forEach((piggybank, id) => {
         if (!piggybank.completed) {
           incomeSelect.innerHTML += `<option value="${id}">${piggybank.name} (${piggybank.current.toFixed(2)}/${piggybank.goal.toFixed(2)} ${piggybank.currency})</option>`;
         }
         
-        if (piggybank.current > 0) {
-          expenseSelect.innerHTML += `<option value="${id}">${piggybank.name} (${piggybank.current.toFixed(2)} ${piggybank.currency} disponible)</option>`;
+        // Show in expense select if it has funds OR if it's an expense tracker
+        if (piggybank.current > 0 || piggybank.created_from_expense) {
+            let label = `${piggybank.name}`;
+            if (piggybank.created_from_expense) {
+                label += ` (Acumulado: ${piggybank.goal.toFixed(2)} ${piggybank.currency})`;
+            } else {
+                label += ` (${piggybank.current.toFixed(2)} ${piggybank.currency} disponible)`;
+            }
+            expenseSelect.innerHTML += `<option value="${id}">${label}</option>`;
         }
       });
+      
+      // Restore if valid (though usually this function is called before modal open so it resets)
     }
     
     function showToast(message, type) {
