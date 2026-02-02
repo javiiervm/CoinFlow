@@ -261,11 +261,11 @@
           </div>
          </div>
          
-   <!-- Modal for Withdraw -->
+   <!-- Modal for Withdraw/Spend -->
    <div id="modal-withdraw" class="fixed inset-0 bg-black/50 modal-backdrop hidden items-center justify-center z-50">
     <div class="theme-bg-secondary rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 animate-slide-in theme-border border">
-     <h3 class="text-3xl font-bold theme-text-primary mb-6">💸 Retirar Fondos</h3>
-     <p class="theme-text-secondary mb-4">Mover dinero de la hucha al saldo global.</p>
+     <h3 id="withdraw-modal-title" class="text-3xl font-bold theme-text-primary mb-6">💸 Gastar de la Hucha</h3>
+     <p id="withdraw-modal-desc" class="theme-text-secondary mb-4">Registrar un gasto directamente desde el presupuesto de la hucha.</p>
      <form id="form-withdraw">
       <input type="hidden" id="withdraw-piggybank-id">
       <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Asunto (Opcional)</label> 
@@ -274,8 +274,16 @@
       <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Cantidad</label> 
           <input type="number" id="withdraw-amount" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" placeholder="0.00" required>
       </div>
+      
+      <div id="withdraw-transfer-container" class="flex items-center gap-3 mb-6 p-3 rounded-xl theme-bg-primary bg-opacity-50 border theme-border">
+          <input type="checkbox" id="withdraw-to-global" class="w-5 h-5 accent-blue-500 rounded focus:ring-blue-500 cursor-pointer">
+          <label for="withdraw-to-global" class="theme-text-primary text-sm font-medium cursor-pointer select-none">
+              Transferir al saldo global <span class="block text-xs theme-text-secondary font-normal">El dinero saldrá de la hucha y se sumará al total.</span>
+          </label>
+      </div>
+
       <div class="flex gap-3">
-          <button type="submit" class="flex-1 theme-btn-primary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Retirar </button> 
+          <button type="submit" class="flex-1 theme-btn-expense font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Gastar </button> 
           <button type="button" id="btn-cancel-withdraw" class="flex-1 theme-btn-secondary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cancelar </button>
       </div>
      </form>
@@ -290,7 +298,7 @@
             <input type="hidden" id="edit-piggybank-id">
             <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Nombre</label> <input type="text" id="edit-piggybank-name" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" required>
             </div>
-            <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Objetivo</label> <input type="number" id="edit-piggybank-goal" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" required>
+            <div id="edit-piggybank-goal-container" class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Objetivo</label> <input type="number" id="edit-piggybank-goal" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500">
             </div>
             <div class="flex gap-3"><button type="submit" class="flex-1 theme-btn-primary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Guardar </button> <button type="button" id="btn-cancel-piggybank-edit" class="flex-1 theme-btn-secondary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cancelar </button>
             </div>
@@ -332,9 +340,14 @@
      <h3 class="text-3xl font-bold theme-text-primary mb-6">📥 Rellenar Presupuesto</h3>
      <form id="form-refill">
       <input type="hidden" id="refill-piggybank-id">
-      <div class="mb-6"><label class="block theme-text-secondary font-semibold mb-2">Cantidad a rellenar</label> 
+      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Cantidad a rellenar</label> 
           <input type="number" id="refill-amount" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-green-500" placeholder="0.00" required>
-          <p class="text-xs theme-text-secondary mt-2">Se descontará del saldo global.</p>
+      </div>
+      <div class="mb-6"><label class="block theme-text-secondary font-semibold mb-2">Origen de los fondos</label> 
+          <select id="refill-source" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-green-500">
+              <option value="balance">Descontar del saldo global</option>
+              <option value="new">Dinero externo (No descontar)</option>
+          </select>
       </div>
       <div class="flex gap-3">
           <button type="submit" class="flex-1 theme-btn-income font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Rellenar </button> 
