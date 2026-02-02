@@ -3,7 +3,7 @@
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestor de Dinero</title>
+  <title>CoinFlow</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,166 +11,228 @@
   <link rel="stylesheet" href="/static/css/style.css">
   <script src="/static/js/app.js" defer></script>
  </head>
- <body class="h-full overflow-auto">
-  <div id="app" class="w-full min-h-full" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-   <div class="max-w-7xl mx-auto px-4 py-8"><!-- Header -->
-    <div class="text-center mb-8 animate-fade-in relative">
-     <button id="btn-delete-all" class="absolute top-0 right-0 p-3 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-all transform hover:scale-110" title="Borrar todos los datos">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-      </svg>
-     </button>
-     <h1 id="app-title" class="text-5xl font-bold text-white mb-2">💰 Mi Gestor de Dinero</h1>
-     <p class="text-white text-opacity-90 text-lg">Controla tus finanzas con estilo</p>
-    </div><!-- Balance Card -->
-    <div class="bg-white rounded-3xl shadow-2xl p-8 mb-8 animate-slide-in">
-     <p class="text-gray-600 text-lg mb-4 font-medium text-center">Saldo Total</p>
-     <div class="flex items-center justify-center gap-16"><!-- Euro Balance -->
+ <body class="h-full overflow-auto theme-bg-primary transition-colors duration-300">
+  <div id="app" class="w-full min-h-full flex flex-col">
+   
+   <!-- Header -->
+   <header class="theme-bg-header shadow-lg transition-colors duration-300">
+       <div class="max-w-7xl mx-auto px-4 py-6 relative flex justify-center items-center">
+            <div class="text-center animate-fade-in">
+                <h1 id="app-title" class="text-4xl font-bold theme-text-header mb-1">💰 CoinFlow</h1>
+                <p class="theme-text-header text-opacity-90 text-sm">Controla tus finanzas con estilo</p>
+            </div>
+            
+            <div class="absolute top-0 right-0 h-full flex items-center pr-4 gap-3">
+                 <!-- Theme Toggle -->
+                 <button id="btn-theme-toggle" class="p-2 bg-white/20 rounded-full hover:bg-white/30 transition-all text-white backdrop-blur-sm" title="Cambiar tema">
+                    <span id="icon-theme" class="text-xl">🌞</span>
+                 </button>
+                 <!-- Delete All -->
+                 <button id="btn-delete-all" class="p-2 bg-white/20 rounded-full hover:bg-red-500 hover:text-white transition-all text-white backdrop-blur-sm" title="Borrar todos los datos">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                 </button>
+            </div>
+       </div>
+   </header>
+
+   <div class="max-w-7xl mx-auto px-4 py-8 w-full flex-grow">
+    
+    <!-- Balance Card -->
+    <div class="theme-bg-secondary rounded-3xl shadow-xl p-8 mb-8 animate-slide-in theme-border border transition-colors duration-300">
+     <p class="theme-text-secondary text-lg mb-4 font-medium text-center">Saldo Total</p>
+     <div class="flex items-center justify-center gap-16">
+      <!-- Euro Balance -->
       <div id="balance-euro" class="text-center">
-       <p class="text-sm text-gray-500 mb-1">Euros</p>
+       <p class="text-sm theme-text-secondary mb-1">Euros</p>
        <p class="text-6xl font-bold transition-all duration-300">0<span class="text-4xl">€</span></p>
-      </div><!-- Dollar Balance -->
+      </div>
+      <!-- Dollar Balance -->
       <div id="balance-dollar" class="text-center">
-       <p class="text-sm text-gray-500 mb-1">Dólares</p>
+       <p class="text-sm theme-text-secondary mb-1">Dólares</p>
        <p class="text-6xl font-bold transition-all duration-300">0<span class="text-4xl">$</span></p>
       </div>
      </div>
-    </div><!-- Action Buttons -->
+    </div>
+    
+    <!-- Action Buttons -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <button id="btn-add-income" class="btn-primary bg-green-500 hover:bg-green-600 text-white font-semibold py-4 px-6 rounded-2xl shadow-lg text-xl"> <span class="text-3xl mr-2">💵</span> Añadir Ingreso </button> 
-        <button id="btn-add-expense" class="btn-primary bg-red-500 hover:bg-red-600 text-white font-semibold py-4 px-6 rounded-2xl shadow-lg text-xl"> <span class="text-3xl mr-2">💸</span> Añadir Gasto </button> 
-        <button id="btn-create-piggybank" class="btn-primary text-white font-semibold py-4 px-6 rounded-2xl shadow-lg text-xl" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);"> <span class="text-3xl mr-2">🐷</span> Crear Hucha </button>
-        <button id="btn-exchange" class="btn-primary bg-blue-500 hover:bg-blue-600 text-white font-semibold py-4 px-6 rounded-2xl shadow-lg text-xl"> <span class="text-3xl mr-2">💱</span> Cambio Divisa </button>
-    </div><!-- Piggybanks Section -->
+        <button id="btn-add-income" class="theme-btn-income font-semibold py-4 px-6 rounded-2xl shadow-lg text-xl flex items-center justify-center transition-transform hover:scale-105"> 
+            <span class="text-3xl mr-2">💵</span> Añadir Ingreso 
+        </button> 
+        <button id="btn-add-expense" class="theme-btn-expense font-semibold py-4 px-6 rounded-2xl shadow-lg text-xl flex items-center justify-center transition-transform hover:scale-105"> 
+            <span class="text-3xl mr-2">💸</span> Añadir Gasto 
+        </button> 
+        <button id="btn-create-piggybank" class="theme-btn-primary font-semibold py-4 px-6 rounded-2xl shadow-lg text-xl flex items-center justify-center transition-transform hover:scale-105"> 
+            <span class="text-3xl mr-2">🐷</span> Crear Hucha 
+        </button>
+        <button id="btn-exchange" class="theme-btn-primary font-semibold py-4 px-6 rounded-2xl shadow-lg text-xl flex items-center justify-center transition-transform hover:scale-105"> 
+            <span class="text-3xl mr-2">💱</span> Cambio Divisa 
+        </button>
+    </div>
+    
+    <!-- Piggybanks Section -->
     <div id="piggybanks-section" class="mb-8">
-     <h2 class="text-3xl font-bold text-white mb-4">🐷 Mis Huchas</h2>
+     <h2 class="text-3xl font-bold theme-text-primary mb-4">🐷 Mis Huchas</h2>
      <div id="piggybanks-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-     <div id="no-piggybanks" class="bg-white bg-opacity-20 rounded-2xl p-8 text-center text-white">
+     <div id="no-piggybanks" class="theme-bg-secondary bg-opacity-50 rounded-2xl p-8 text-center theme-text-secondary border theme-border border-dashed">
       <p class="text-xl">No tienes huchas creadas. ¡Crea una para empezar a ahorrar!</p>
      </div>
-    </div><!-- Transactions Section -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8"><!-- Income -->
-     <div class="bg-white rounded-3xl shadow-2xl p-6">
-      <h2 class="text-2xl font-bold text-gray-800 mb-4">📈 Ingresos</h2>
-      <div id="income-list" class="space-y-3 max-h-96 overflow-y-auto"></div>
-      <div id="no-income" class="text-gray-400 text-center py-8">
+    </div>
+    
+    <!-- Transactions Section -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+     <!-- Income -->
+     <div class="theme-bg-secondary rounded-3xl shadow-xl p-6 theme-border border transition-colors duration-300">
+      <h2 class="text-2xl font-bold theme-text-primary mb-4 flex items-center gap-2"><span class="text-green-500">📈</span> Ingresos</h2>
+      <div id="income-list" class="space-y-3 max-h-96 overflow-y-auto custom-scrollbar"></div>
+      <div id="no-income" class="theme-text-secondary text-center py-8">
        <p>No hay ingresos registrados</p>
       </div>
-     </div><!-- Expenses -->
-     <div class="bg-white rounded-3xl shadow-2xl p-6">
-      <h2 class="text-2xl font-bold text-gray-800 mb-4">📉 Gastos</h2>
-      <div id="expense-list" class="space-y-3 max-h-96 overflow-y-auto"></div>
-      <div id="no-expenses" class="text-gray-400 text-center py-8">
+     </div>
+     <!-- Expenses -->
+     <div class="theme-bg-secondary rounded-3xl shadow-xl p-6 theme-border border transition-colors duration-300">
+      <h2 class="text-2xl font-bold theme-text-primary mb-4 flex items-center gap-2"><span class="text-red-500">📉</span> Gastos</h2>
+      <div id="expense-list" class="space-y-3 max-h-96 overflow-y-auto custom-scrollbar"></div>
+      <div id="no-expenses" class="theme-text-secondary text-center py-8">
        <p>No hay gastos registrados</p>
       </div>
      </div>
     </div>
-   </div><!-- Modal for Income -->
-   <div id="modal-income" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden items-center justify-center z-50" style="display: none;">
-    <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 animate-slide-in">
-     <h3 class="text-3xl font-bold text-gray-800 mb-6">💵 Nuevo Ingreso</h3>
+    
+   </div>
+
+   <!-- Modal for Income -->
+   <div id="modal-income" class="fixed inset-0 bg-black/50 modal-backdrop hidden items-center justify-center z-50">
+    <div class="theme-bg-secondary rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 animate-slide-in theme-border border">
+     <h3 class="text-3xl font-bold theme-text-primary mb-6">💵 Nuevo Ingreso</h3>
      <form id="form-income">
-      <div class="mb-4"><label class="block text-gray-700 font-semibold mb-2">Concepto</label> <input type="text" id="income-concept" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-green-500 focus:outline-none transition-colors" placeholder="Ej: Salario" required>
+      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Concepto</label> 
+          <input type="text" id="income-concept" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-green-500" placeholder="Ej: Salario" required>
       </div>
-      <div class="mb-4"><label class="block text-gray-700 font-semibold mb-2">Cantidad</label> <input type="number" id="income-amount" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-green-500 focus:outline-none transition-colors" placeholder="0.00" required>
+      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Cantidad</label> 
+          <input type="number" id="income-amount" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-green-500" placeholder="0.00" required>
       </div>
-      <div class="mb-4"><label class="block text-gray-700 font-semibold mb-2">Divisa</label> <select id="income-currency" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-green-500 focus:outline-none transition-colors"> <option value="€">€ - Euro</option> <option value="$">$ - Dólar</option> </select>
+      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Divisa</label> 
+          <select id="income-currency" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-green-500"> <option value="€">€ - Euro</option> <option value="$">$ - Dólar</option> </select>
       </div>
-      <div class="mb-6"><label class="block text-gray-700 font-semibold mb-2">¿Destinar a una hucha?</label> <select id="income-piggybank" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-green-500 focus:outline-none transition-colors"> <option value="">No, al saldo global</option> </select>
+      <div class="mb-6"><label class="block theme-text-secondary font-semibold mb-2">¿Destinar a una hucha?</label> 
+          <select id="income-piggybank" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-green-500"> <option value="">No, al saldo global</option> </select>
       </div>
-      <div class="flex gap-3"><button type="submit" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Añadir </button> <button type="button" id="btn-cancel-income" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cancelar </button>
-      </div>
-     </form>
-    </div>
-   </div><!-- Modal for Expense -->
-   <div id="modal-expense" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden items-center justify-center z-50" style="display: none;">
-    <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 animate-slide-in">
-     <h3 class="text-3xl font-bold text-gray-800 mb-6">💸 Nuevo Gasto</h3>
-     <form id="form-expense">
-      <div class="mb-4"><label class="block text-gray-700 font-semibold mb-2">Concepto</label> <input type="text" id="expense-concept" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-red-500 focus:outline-none transition-colors" placeholder="Ej: Compra supermercado" required>
-      </div>
-      <div class="mb-4"><label class="block text-gray-700 font-semibold mb-2">Cantidad</label> <input type="number" id="expense-amount" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-red-500 focus:outline-none transition-colors" placeholder="0.00" required>
-      </div>
-      <div class="mb-4"><label class="block text-gray-700 font-semibold mb-2">Divisa</label> <select id="expense-currency" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-red-500 focus:outline-none transition-colors"> <option value="€">€ - Euro</option> <option value="$">$ - Dólar</option> </select>
-      </div>
-      <div class="mb-6"><label class="block text-gray-700 font-semibold mb-2">¿Pagar desde una hucha?</label> <select id="expense-piggybank" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-red-500 focus:outline-none transition-colors"> <option value="">No, del saldo global</option> </select>
-      </div>
-      <div class="flex gap-3"><button type="submit" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Añadir </button> <button type="button" id="btn-cancel-expense" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cancelar </button>
-      </div>
-     </form>
-    </div>
-   </div><!-- Modal for Piggybank -->
-   <div id="modal-piggybank" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden items-center justify-center z-50" style="display: none;">
-    <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 animate-slide-in">
-     <h3 class="text-3xl font-bold text-gray-800 mb-6">🐷 Nueva Hucha</h3>
-     <form id="form-piggybank">
-      <div class="mb-4"><label class="block text-gray-700 font-semibold mb-2">Nombre</label> <input type="text" id="piggybank-name" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-purple-500 focus:outline-none transition-colors" placeholder="Ej: Vacaciones" required>
-      </div>
-      <div class="mb-4"><label class="block text-gray-700 font-semibold mb-2">Objetivo</label> <input type="number" id="piggybank-goal" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-purple-500 focus:outline-none transition-colors" placeholder="0.00" required>
-      </div>
-      <div class="mb-6"><label class="block text-gray-700 font-semibold mb-2">Divisa</label> <select id="piggybank-currency" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-purple-500 focus:outline-none transition-colors"> <option value="€">€ - Euro</option> <option value="$">$ - Dólar</option> </select>
-      </div>
-      <div class="flex gap-3"><button type="submit" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Crear </button> <button type="button" id="btn-cancel-piggybank" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cancelar </button>
-      </div>
-     </form>
-    </div>
-   </div><!-- Modal for Exchange -->
-   <div id="modal-exchange" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden items-center justify-center z-50" style="display: none;">
-    <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 animate-slide-in">
-     <h3 class="text-3xl font-bold text-gray-800 mb-6">💱 Cambio de Divisa</h3>
-     <form id="form-exchange">
-       <div class="grid grid-cols-2 gap-4">
-          <div class="mb-4">
-              <label class="block text-gray-700 font-semibold mb-2">Vender (Origen)</label> 
-              <input type="number" id="exchange-amount-from" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:outline-none transition-colors" placeholder="0.00" required>
-              <select id="exchange-currency-from" class="w-full px-4 py-3 mt-2 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:outline-none transition-colors"> <option value="€">€ - Euro</option> <option value="$">$ - Dólar</option> </select>
-          </div>
-          <div class="mb-4">
-              <label class="block text-gray-700 font-semibold mb-2">Tasa de cambio</label> 
-              <input type="number" id="exchange-rate" step="0.0001" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:outline-none transition-colors" placeholder="1.0000" required>
-              <p class="text-xs text-gray-500 mt-1">Se actualiza automáticamente</p>
-          </div>
-          <div class="mb-6">
-              <label class="block text-gray-700 font-semibold mb-2">Comprar (Destino)</label> 
-              <input type="number" id="exchange-amount-to" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 focus:outline-none transition-colors" placeholder="0.00" readonly>
-              <select id="exchange-currency-to" class="w-full px-4 py-3 mt-2 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:outline-none transition-colors"> <option value="$">$ - Dólar</option> <option value="€">€ - Euro</option> </select>
-          </div>
-       </div>
-      <div class="flex gap-3"><button type="submit" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cambiar </button> <button type="button" id="btn-cancel-exchange" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cancelar </button>
-      </div>
-     </form>
-    </div>
-   </div><!-- Modal for Settings -->
-   <div id="modal-settings" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden items-center justify-center z-50" style="display: none;">
-    <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 animate-slide-in">
-     <h3 class="text-3xl font-bold text-gray-800 mb-6">⚙️ Configuración</h3>
-     <div class="space-y-4">
-      <div><label class="block text-gray-700 font-semibold mb-2">Divisa Preferida</label> <select id="settings-preferred-currency" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-purple-500 focus:outline-none transition-colors"> <option value="€">€ - Euro</option> <option value="$">$ - Dólar</option> </select>
-      </div>
-     </div>
-     <div class="mt-6"><button id="btn-close-settings" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Guardar </button>
-     </div>
-    </div>
-   </div><!-- Modal for Edit Transaction -->
-   <div id="modal-edit" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden items-center justify-center z-50" style="display: none;">
-    <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 animate-slide-in">
-     <h3 id="edit-modal-title" class="text-3xl font-bold text-gray-800 mb-6">✏️ Editar Transacción</h3>
-     <form id="form-edit">
-      <div class="mb-4"><label class="block text-gray-700 font-semibold mb-2">Concepto</label> <input type="text" id="edit-concept" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:outline-none transition-colors" required>
-      </div>
-      <div class="mb-4"><label class="block text-gray-700 font-semibold mb-2">Cantidad</label> <input type="number" id="edit-amount" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:outline-none transition-colors" required>
-      </div>
-      <div class="mb-4"><label class="block text-gray-700 font-semibold mb-2">Divisa</label> <select id="edit-currency" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:outline-none transition-colors"> <option value="€">€ - Euro</option> <option value="$">$ - Dólar</option> </select>
-      </div>
-      <div class="mb-4"><label class="block text-gray-700 font-semibold mb-2">Fecha</label> <input type="date" id="edit-date" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:outline-none transition-colors" required>
-      </div>
-      <div class="mb-6"><label id="edit-piggybank-label" class="block text-gray-700 font-semibold mb-2">Hucha</label> <select id="edit-piggybank" class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:outline-none transition-colors"> <option value="">Saldo global</option> </select>
-      </div>
-      <div class="flex gap-3"><button type="submit" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Guardar </button> <button type="button" id="btn-cancel-edit" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cancelar </button>
+      <div class="flex gap-3">
+          <button type="submit" class="flex-1 theme-btn-income font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Añadir </button> 
+          <button type="button" id="btn-cancel-income" class="flex-1 theme-btn-secondary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cancelar </button>
       </div>
      </form>
     </div>
    </div>
+
+   <!-- Modal for Expense -->
+   <div id="modal-expense" class="fixed inset-0 bg-black/50 modal-backdrop hidden items-center justify-center z-50">
+    <div class="theme-bg-secondary rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 animate-slide-in theme-border border">
+     <h3 class="text-3xl font-bold theme-text-primary mb-6">💸 Nuevo Gasto</h3>
+     <form id="form-expense">
+      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Concepto</label> 
+          <input type="text" id="expense-concept" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-red-500" placeholder="Ej: Compra supermercado" required>
+      </div>
+      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Cantidad</label> 
+          <input type="number" id="expense-amount" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-red-500" placeholder="0.00" required>
+      </div>
+      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Divisa</label> 
+          <select id="expense-currency" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-red-500"> <option value="€">€ - Euro</option> <option value="$">$ - Dólar</option> </select>
+      </div>
+      <div class="mb-6"><label class="block theme-text-secondary font-semibold mb-2">¿Pagar desde una hucha?</label> 
+          <select id="expense-piggybank" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-red-500"> <option value="">No, del saldo global</option> </select>
+      </div>
+      <div class="flex gap-3">
+          <button type="submit" class="flex-1 theme-btn-expense font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Añadir </button> 
+          <button type="button" id="btn-cancel-expense" class="flex-1 theme-btn-secondary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cancelar </button>
+      </div>
+     </form>
+    </div>
+   </div>
+
+   <!-- Modal for Piggybank -->
+   <div id="modal-piggybank" class="fixed inset-0 bg-black/50 modal-backdrop hidden items-center justify-center z-50">
+    <div class="theme-bg-secondary rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 animate-slide-in theme-border border">
+     <h3 class="text-3xl font-bold theme-text-primary mb-6">🐷 Nueva Hucha</h3>
+     <form id="form-piggybank">
+      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Nombre</label> 
+          <input type="text" id="piggybank-name" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" placeholder="Ej: Vacaciones" required>
+      </div>
+      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Objetivo</label> 
+          <input type="number" id="piggybank-goal" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" placeholder="0.00" required>
+      </div>
+      <div class="mb-6"><label class="block theme-text-secondary font-semibold mb-2">Divisa</label> 
+          <select id="piggybank-currency" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500"> <option value="€">€ - Euro</option> <option value="$">$ - Dólar</option> </select>
+      </div>
+      <div class="flex gap-3">
+          <button type="submit" class="flex-1 theme-btn-primary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Crear </button> 
+          <button type="button" id="btn-cancel-piggybank" class="flex-1 theme-btn-secondary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cancelar </button>
+      </div>
+     </form>
+    </div>
+   </div>
+
+   <!-- Modal for Exchange -->
+   <div id="modal-exchange" class="fixed inset-0 bg-black/50 modal-backdrop hidden items-center justify-center z-50">
+    <div class="theme-bg-secondary rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 animate-slide-in theme-border border">
+     <h3 class="text-3xl font-bold theme-text-primary mb-6">💱 Cambio de Divisa</h3>
+     <form id="form-exchange">
+       <div class="grid grid-cols-2 gap-4">
+          <div class="mb-4">
+              <label class="block theme-text-secondary font-semibold mb-2">Vender (Origen)</label> 
+              <input type="number" id="exchange-amount-from" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" placeholder="0.00" required>
+              <select id="exchange-currency-from" class="w-full px-4 py-3 mt-2 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500"> <option value="€">€ - Euro</option> <option value="$">$ - Dólar</option> </select>
+          </div>
+          <div class="mb-4">
+              <label class="block theme-text-secondary font-semibold mb-2">Tasa de cambio</label> 
+              <input type="number" id="exchange-rate" step="0.0001" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" placeholder="1.0000" required>
+              <p class="text-xs theme-text-secondary mt-1">Se actualiza automáticamente</p>
+          </div>
+          <div class="mb-6">
+              <label class="block theme-text-secondary font-semibold mb-2">Comprar (Destino)</label> 
+              <input type="number" id="exchange-amount-to" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border bg-gray-100 dark:bg-gray-800" placeholder="0.00" readonly>
+              <select id="exchange-currency-to" class="w-full px-4 py-3 mt-2 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500"> <option value="$">$ - Dólar</option> <option value="€">€ - Euro</option> </select>
+          </div>
+       </div>
+      <div class="flex gap-3">
+          <button type="submit" class="flex-1 theme-btn-primary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cambiar </button> 
+          <button type="button" id="btn-cancel-exchange" class="flex-1 theme-btn-secondary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cancelar </button>
+      </div>
+     </form>
+    </div>
+   </div>
+
+   <!-- Modal for Edit Transaction -->
+   <div id="modal-edit" class="fixed inset-0 bg-black/50 modal-backdrop hidden items-center justify-center z-50">
+    <div class="theme-bg-secondary rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 animate-slide-in theme-border border">
+     <h3 id="edit-modal-title" class="text-3xl font-bold theme-text-primary mb-6">✏️ Editar Transacción</h3>
+     <form id="form-edit">
+      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Concepto</label> 
+          <input type="text" id="edit-concept" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" required>
+      </div>
+      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Cantidad</label> 
+          <input type="number" id="edit-amount" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" required>
+      </div>
+      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Divisa</label> 
+          <select id="edit-currency" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500"> <option value="€">€ - Euro</option> <option value="$">$ - Dólar</option> </select>
+      </div>
+      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Fecha</label> 
+          <input type="date" id="edit-date" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" required>
+      </div>
+      <div class="mb-6"><label id="edit-piggybank-label" class="block theme-text-secondary font-semibold mb-2">Hucha</label> 
+          <select id="edit-piggybank" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500"> <option value="">Saldo global</option> </select>
+      </div>
+      <div class="flex gap-3">
+          <button type="submit" class="flex-1 theme-btn-primary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Guardar </button> 
+          <button type="button" id="btn-cancel-edit" class="flex-1 theme-btn-secondary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cancelar </button>
+      </div>
+     </form>
+    </div>
+   </div>
+   
   </div>
  </body>
 </html>

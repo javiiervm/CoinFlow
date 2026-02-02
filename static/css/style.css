@@ -1,10 +1,114 @@
+:root {
+      /* CoinFlow Light */
+      --bg-primary: #F8F9FA;
+      --bg-secondary: #FFFFFF;
+      --bg-header: #3498DB;
+      --border-color: #E0E0E0;
+      
+      --text-primary: #2C3E50;
+      --text-secondary: #7F8C8D;
+      --text-header: #FFFFFF;
+      
+      --color-income: #2ECC71;
+      --color-expense: #E74C3C;
+      --color-accent: #F1C40F;
+      
+      --btn-primary-bg: #3498DB;
+      --btn-primary-text: #FFFFFF;
+      --btn-income-bg: #2ECC71;
+      --btn-income-text: #FFFFFF;
+      --btn-expense-bg: #E74C3C;
+      --btn-expense-text: #FFFFFF;
+      --btn-secondary-bg: #ECF0F1;
+      --btn-secondary-text: #2C3E50;
+    }
+
+    [data-theme="dark"] {
+      /* CoinFlow Dark */
+      --bg-primary: #121A24;
+      --bg-secondary: #1E2A38;
+      --bg-header: #1F3A5F;
+      --border-color: #2C3E50;
+      
+      --text-primary: #ECF0F1;
+      --text-secondary: #95A5A6;
+      --text-header: #FFFFFF; /* Kept white for contrast on deep blue */
+      
+      --color-income: #27AE60;
+      --color-expense: #C0392B;
+      --color-accent: #F4D03F;
+      
+      --btn-primary-bg: #3498DB;
+      --btn-primary-text: #ECF0F1;
+      --btn-income-bg: #27AE60;
+      --btn-income-text: #ECF0F1;
+      --btn-expense-bg: #C0392B;
+      --btn-expense-text: #ECF0F1;
+      --btn-secondary-bg: #2C3E50;
+      --btn-secondary-text: #ECF0F1;
+    }
+
     body {
       box-sizing: border-box;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      transition: background-color 0.3s, color 0.3s;
     }
     
     * {
       font-family: 'Outfit', system-ui, -apple-system, sans-serif;
     }
+
+    /* Theme Utility Classes */
+    .theme-bg-primary { background-color: var(--bg-primary); }
+    .theme-bg-secondary { background-color: var(--bg-secondary); }
+    .theme-bg-header { background-color: var(--bg-header); }
+    .theme-border { border-color: var(--border-color); }
+    
+    .theme-text-primary { color: var(--text-primary); }
+    .theme-text-secondary { color: var(--text-secondary); }
+    .theme-text-header { color: var(--text-header); }
+    
+    .theme-text-income { color: var(--color-income); }
+    .theme-text-expense { color: var(--color-expense); }
+    .theme-text-accent { color: var(--color-accent); }
+
+    .theme-btn-primary {
+      background-color: var(--btn-primary-bg);
+      color: var(--btn-primary-text);
+    }
+    .theme-btn-primary:hover {
+        filter: brightness(1.1);
+    }
+    
+    .theme-btn-income {
+      background-color: var(--btn-income-bg);
+      color: var(--btn-income-text);
+    }
+    .theme-btn-income:hover { filter: brightness(1.05); }
+
+    .theme-btn-expense {
+      background-color: var(--btn-expense-bg);
+      color: var(--btn-expense-text);
+    }
+    .theme-btn-expense:hover { filter: brightness(1.05); }
+
+    .theme-btn-secondary {
+      background-color: var(--btn-secondary-bg);
+      color: var(--btn-secondary-text);
+    }
+
+    /* Override input styles for dark mode */
+    input, select {
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        border-color: var(--border-color);
+    }
+    input::placeholder {
+        color: var(--text-secondary);
+        opacity: 0.7;
+    }
+
     
     @keyframes slideIn {
       from {
@@ -49,6 +153,8 @@
     
     .transaction-item {
       transition: all 0.3s ease;
+      background-color: var(--bg-secondary); /* Default base */
+      border: 1px solid var(--border-color);
     }
     
     .transaction-item:hover {
@@ -57,6 +163,8 @@
     
     .piggybank-card {
       transition: all 0.3s ease;
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
     }
     
     .piggybank-card:hover {

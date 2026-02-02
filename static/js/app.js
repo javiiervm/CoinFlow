@@ -1,5 +1,4 @@
-
-    let transactions = [];
+let transactions = [];
     let piggybanks = new Map();
     
     // API Helper
@@ -25,6 +24,10 @@
     }
 
     async function initApp() {
+      // Theme Initialization
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      setTheme(savedTheme);
+
       await loadData();
       setupEventListeners();
       
@@ -33,20 +36,31 @@
       updateOtherCurrencySelector();
     }
     
+    function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        const icon = document.getElementById('icon-theme');
+        if (icon) {
+            icon.textContent = theme === 'dark' ? '🌙' : '🌞';
+        }
+    }
+
+    function toggleTheme() {
+        const current = localStorage.getItem('theme') || 'light';
+        setTheme(current === 'light' ? 'dark' : 'light');
+    }
+    
     async function loadData() {
       const data = await apiCall('/api/data');
       if (data) {
         transactions = data.transactions || [];
-        // Convert array back to Map for piggybanks
         piggybanks.clear();
         (data.piggybanks || []).forEach(pb => {
-             // Backend uses 'concept' and 'amount', Frontend uses 'name' and 'goal'
-             // Map them correctly here to avoid crashes in renderPiggybanks
              piggybanks.set(pb.id, {
                  ...pb,
                  name: pb.concept,
                  goal: pb.amount,
-                 current: 0, // Will be calculated in updatePiggybanks
+                 current: 0, 
                  completed: false
              });
         });
@@ -54,14 +68,20 @@
       }
     }
 
-    // Placeholder for elementSdk (retained for structure but simplified)
     function updateOtherCurrencySelector() {
-        // No-op for now
+        // No-op
     }
 
     let editingTransaction = null;
     
     function setupEventListeners() {
+      // Theme Toggle
+      const btnTheme = document.getElementById('btn-theme-toggle');
+      if (btnTheme) {
+          btnTheme.addEventListener('click', toggleTheme);
+      }
+
+      // Delete All
       const btnDeleteAll = document.getElementById('btn-delete-all');
       if (btnDeleteAll) {
           btnDeleteAll.addEventListener('click', async () => {
@@ -91,12 +111,11 @@
         document.getElementById('modal-piggybank').style.display = 'flex';
       });
       
-       // New Exchange Button
       const exchangeBtn = document.getElementById('btn-exchange');
       if(exchangeBtn) {
           exchangeBtn.addEventListener('click', () => {
              document.getElementById('modal-exchange').style.display = 'flex';
-             updateExchangeRate(); // Fetch rate when opening
+             updateExchangeRate();
           });
       }
 
@@ -121,7 +140,6 @@
         editingTransaction = null;
       });
       
-      // New Exchange Cancel
       const cancelExchangeBtn = document.getElementById('btn-cancel-exchange');
       if(cancelExchangeBtn) {
           cancelExchangeBtn.addEventListener('click', () => {
@@ -130,7 +148,6 @@
           });
       }
 
-      // Exchange Auto-Calculation Listeners
       const exAmountFrom = document.getElementById('exchange-amount-from');
       const exRate = document.getElementById('exchange-rate');
       const exCurrFrom = document.getElementById('exchange-currency-from');
@@ -148,11 +165,6 @@
       
       const formExchange = document.getElementById('form-exchange');
       if(formExchange) formExchange.addEventListener('submit', handleExchangeSubmit);
-      
-      // Close settings
-       document.getElementById('btn-close-settings').addEventListener('click', () => {
-          document.getElementById('modal-settings').style.display = 'none';
-       });
     }
 
     const currencyMap = {
@@ -176,7 +188,7 @@
         const fromCode = currencyMap[from] || 'EUR';
         const toCode = currencyMap[to] || 'USD';
 
-        rateInput.parentElement.classList.add('opacity-50'); // visual feedback
+        rateInput.parentElement.classList.add('opacity-50');
         
         try {
             const response = await fetch(`https://open.er-api.com/v6/latest/${fromCode}`);
@@ -185,11 +197,10 @@
             if (data && data.rates && data.rates[toCode]) {
                 rateInput.value = data.rates[toCode].toFixed(4);
             } else {
-                rateInput.value = 1.0000; // Fallback
+                rateInput.value = 1.0000;
             }
         } catch (e) {
             console.error("Error fetching rates", e);
-            // Don't change value if fetch fails, user might have entered manually
         } finally {
             rateInput.parentElement.classList.remove('opacity-50');
             calculateExchange();
@@ -302,7 +313,7 @@
         document.getElementById('form-edit').reset();
         editingTransaction = null;
         showToast('Transacción actualizada correctamente', 'success');
-        loadData(); // Reload to refresh state
+        loadData();
       } else {
         showToast('Error al actualizar la transacción', 'error');
       }
@@ -414,7 +425,7 @@
       submitButton.textContent = 'Creando...';
       
       const result = await apiCall('/api/piggybank', 'POST', {
-        id: Date.now().toString(), // Helper for backend, though backend can assign ID
+        id: Date.now().toString(),
         concept: name,
         amount: goal,
         currency,
@@ -489,24 +500,8 @@
       incomes.forEach(income => {
         const currency = income.currency || '€';
         if (income.piggybank_id) {
-          const piggybank = piggybanks.get(income.piggybank_id);
-          if (piggybank) {
-            const piggybankIncomes = incomes.filter(i => i.piggybank_id === income.piggybank_id);
-            const piggybankExpenses = expenses.filter(e => e.piggybank_id === income.piggybank_id);
-            
-            const totalPiggybankIncome = piggybankIncomes.reduce((sum, t) => sum + t.amount, 0);
-            const totalPiggybankExpense = piggybankExpenses.reduce((sum, t) => sum + t.amount, 0);
-            
-            // Logic to check how much actually overflows
-            // The logic here is tricky: We need to calculate the state of the piggybank
-            // based on ALL transactions.
-            // Simplified: If the piggybank is full, any NEW income overflows.
-            // But 'overflow' calculation here iterates per transaction.
-            // It's better to calculate the TOTAL overflow of the piggybank once and add it to the global balance.
-            
-          }
+            // piggybank logic handled in overflow check
         } else {
-          // Regular income
           if (currency === '€') {
             euroBalance.income += income.amount;
           } else if (currency === '$') {
@@ -515,7 +510,6 @@
         }
       });
       
-      // Calculate Overflow separately
       piggybanks.forEach(pb => {
           if (pb.current > pb.goal) {
               const overflow = pb.current - pb.goal;
@@ -539,24 +533,21 @@
       const dollarTotal = dollarBalance.income - dollarBalance.expense;
       
       const euroElement = document.getElementById('balance-euro');
-      const euroColor = euroTotal < 0 ? '#ef4444' : '#10b981';
+      const euroColor = euroTotal < 0 ? 'var(--color-expense)' : 'var(--color-income)';
       euroElement.innerHTML = `
-        <p class="text-sm text-gray-500 mb-1">Euros</p>
+        <p class="text-sm theme-text-secondary mb-1">Euros</p>
         <p class="text-6xl font-bold transition-all duration-300" style="color: ${euroColor}">${euroTotal.toFixed(2)}<span class="text-4xl">€</span></p>
       `;
       
       const dollarElement = document.getElementById('balance-dollar');
-      const dollarColor = dollarTotal < 0 ? '#ef4444' : '#10b981';
+      const dollarColor = dollarTotal < 0 ? 'var(--color-expense)' : 'var(--color-income)';
       dollarElement.innerHTML = `
-        <p class="text-sm text-gray-500 mb-1">Dólares</p>
+        <p class="text-sm theme-text-secondary mb-1">Dólares</p>
         <p class="text-6xl font-bold transition-all duration-300" style="color: ${dollarColor}">${dollarTotal.toFixed(2)}<span class="text-4xl">$</span></p>
       `;
     }
     
     function updatePiggybanks() {
-        // We re-calculate the status of every piggybank based on transactions
-        // Note: piggybanks Map was initialized in loadData() with the definitions
-        
         piggybanks.forEach((pb, id) => {
              const incomes = transactions.filter(t => t.type === 'income' && t.piggybank_id === id);
              const expenses = transactions.filter(t => t.type === 'expense' && t.piggybank_id === id);
@@ -564,18 +555,7 @@
              const totalIncome = incomes.reduce((sum, t) => sum + t.amount, 0);
              const totalExpense = expenses.reduce((sum, t) => sum + t.amount, 0);
              
-             // The "current" value of a piggybank is how much is INSIDE it.
-             // If it overflows, the overflow is conceptually "out" of the piggybank into the global balance,
-             // BUT for the progress bar, we might want to show it full.
-             // However, the logic says "sobra dinero... se va al saldo global".
-             // So the piggybank caps at its goal.
-             
              let rawCurrent = totalIncome - totalExpense;
-             // If rawCurrent > goal, the excess is effectively in the global balance.
-             // So the jar contains min(rawCurrent, goal).
-             // Wait, if I cap it here, the updateBalance logic needs to know the overflow amount.
-             
-             // Let's store rawCurrent in the object for calculation
              pb.current = rawCurrent; 
              pb.completed = rawCurrent >= pb.goal;
         });
@@ -597,40 +577,35 @@
       container.innerHTML = '';
       
       piggybanks.forEach((piggybank, id) => {
-        // Display logic: capped at 100% for the visual bar?
-        // Or show >100%?
-        // "Cuando la hucha esté llena... los 20€ restantes pasarían a añadirse al saldo global"
-        // This implies the jar visually stays at 100% (or the specific goal amount).
-        
         const displayCurrent = Math.min(piggybank.current, piggybank.goal);
         const percentage = (displayCurrent / piggybank.goal) * 100;
         const isCompleted = piggybank.completed;
         
         const card = document.createElement('div');
-        card.className = 'piggybank-card bg-white rounded-2xl shadow-lg p-6 relative overflow-hidden';
+        card.className = 'piggybank-card theme-bg-secondary rounded-2xl shadow-lg p-6 relative overflow-hidden theme-border border transition-colors duration-300';
         
         card.innerHTML = `
           <div class="flex justify-between items-start mb-4">
             <div>
-              <h3 class="text-xl font-bold text-gray-800">${piggybank.name}</h3>
-              <p class="text-sm text-gray-500">Objetivo: ${piggybank.goal.toFixed(2)}${piggybank.currency || '€'}</p>
+              <h3 class="text-xl font-bold theme-text-primary">${piggybank.name}</h3>
+              <p class="text-sm theme-text-secondary">Objetivo: ${piggybank.goal.toFixed(2)}${piggybank.currency || '€'}</p>
             </div>
-            <button class="delete-piggybank text-red-500 hover:text-red-700 font-bold text-xl" data-id="${id}">×</button>
+            <button class="delete-piggybank theme-text-expense hover:opacity-75 font-bold text-xl" data-id="${id}">×</button>
           </div>
           
           ${isCompleted ? '<div class="absolute top-4 right-4"><span class="text-3xl">✅</span></div>' : ''}
           
           <div class="mb-3">
             <div class="flex justify-between text-sm mb-1">
-              <span class="font-semibold text-gray-700">${displayCurrent.toFixed(2)}${piggybank.currency || '€'}</span>
-              <span class="text-gray-500">${percentage.toFixed(0)}%</span>
+              <span class="font-semibold theme-text-primary">${displayCurrent.toFixed(2)}${piggybank.currency || '€'}</span>
+              <span class="theme-text-secondary">${percentage.toFixed(0)}%</span>
             </div>
-            <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-              <div class="progress-bar h-full rounded-full transition-all ${isCompleted ? 'bg-green-500' : 'bg-purple-500'}" style="width: ${Math.min(percentage, 100)}%"></div>
+            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+              <div class="progress-bar h-full rounded-full transition-all ${isCompleted ? 'theme-bg-income' : 'theme-bg-header'}" style="width: ${Math.min(percentage, 100)}%; background-color: ${isCompleted ? 'var(--color-income)' : 'var(--bg-header)'}"></div>
             </div>
           </div>
           
-          ${isCompleted ? '<p class="text-green-600 font-semibold text-center">¡Objetivo completado! 🎉</p>' : ''}
+          ${isCompleted ? '<p class="theme-text-income font-semibold text-center">¡Objetivo completado! 🎉</p>' : ''}
         `;
         
         container.appendChild(card);
@@ -672,20 +647,20 @@
       } else {
         noIncome.style.display = 'none';
         incomeList.innerHTML = incomes.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).map(income => `
-          <div class="transaction-item bg-green-50 rounded-xl p-4 flex justify-between items-center">
+          <div class="transaction-item theme-bg-secondary border-l-4 rounded-xl p-4 flex justify-between items-center mb-3 theme-border border shadow-sm" style="border-left-color: var(--color-income);">
             <div>
-              <p class="font-semibold text-gray-800">
+              <p class="font-semibold theme-text-primary">
                 ${income.concept}
-                ${income.edited ? '<span class="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full ml-2">Editado</span>' : ''}
+                ${income.edited ? '<span class="text-xs theme-btn-primary text-white px-2 py-0.5 rounded-full ml-2">Editado</span>' : ''}
               </p>
-              ${income.piggybank_name ? `<p class="text-xs text-gray-500">→ ${income.piggybank_name}</p>` : ''}
-              <p class="text-xs text-gray-500">${new Date(income.timestamp).toLocaleDateString()}</p>
+              ${income.piggybank_name ? `<p class="text-xs theme-text-secondary">→ ${income.piggybank_name}</p>` : ''}
+              <p class="text-xs theme-text-secondary">${new Date(income.timestamp).toLocaleDateString()}</p>
             </div>
             <div class="text-right">
-              <p class="font-bold text-green-600 text-lg">+${income.amount.toFixed(2)}${income.currency || '€'}</p>
+              <p class="font-bold theme-text-income text-lg">+${income.amount.toFixed(2)}${income.currency || '€'}</p>
               <div class="flex gap-2 justify-end mt-1">
-                <button class="edit-transaction text-blue-500 hover:text-blue-700 text-sm" data-id="${income.id}">Editar</button>
-                <button class="delete-transaction text-red-500 hover:text-red-700 text-sm" data-id="${income.id}">Eliminar</button>
+                <button class="edit-transaction theme-text-secondary hover:text-blue-500 text-sm" data-id="${income.id}">Editar</button>
+                <button class="delete-transaction theme-text-secondary hover:text-red-500 text-sm" data-id="${income.id}">Eliminar</button>
               </div>
             </div>
           </div>
@@ -698,20 +673,20 @@
       } else {
         noExpenses.style.display = 'none';
         expenseList.innerHTML = expenses.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).map(expense => `
-          <div class="transaction-item bg-red-50 rounded-xl p-4 flex justify-between items-center">
+          <div class="transaction-item theme-bg-secondary border-l-4 rounded-xl p-4 flex justify-between items-center mb-3 theme-border border shadow-sm" style="border-left-color: var(--color-expense);">
             <div>
-              <p class="font-semibold text-gray-800">
+              <p class="font-semibold theme-text-primary">
                 ${expense.concept}
-                ${expense.edited ? '<span class="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full ml-2">Editado</span>' : ''}
+                ${expense.edited ? '<span class="text-xs theme-btn-primary text-white px-2 py-0.5 rounded-full ml-2">Editado</span>' : ''}
               </p>
-              ${expense.piggybank_name ? `<p class="text-xs text-gray-500">← ${expense.piggybank_name}</p>` : ''}
-              <p class="text-xs text-gray-500">${new Date(expense.timestamp).toLocaleDateString()}</p>
+              ${expense.piggybank_name ? `<p class="text-xs theme-text-secondary">← ${expense.piggybank_name}</p>` : ''}
+              <p class="text-xs theme-text-secondary">${new Date(expense.timestamp).toLocaleDateString()}</p>
             </div>
             <div class="text-right">
-              <p class="font-bold text-red-600 text-lg">-${expense.amount.toFixed(2)}${expense.currency || '€'}</p>
+              <p class="font-bold theme-text-expense text-lg">-${expense.amount.toFixed(2)}${expense.currency || '€'}</p>
               <div class="flex gap-2 justify-end mt-1">
-                <button class="edit-transaction text-blue-500 hover:text-blue-700 text-sm" data-id="${expense.id}">Editar</button>
-                <button class="delete-transaction text-red-500 hover:text-red-700 text-sm" data-id="${expense.id}">Eliminar</button>
+                <button class="edit-transaction theme-text-secondary hover:text-blue-500 text-sm" data-id="${expense.id}">Editar</button>
+                <button class="delete-transaction theme-text-secondary hover:text-red-500 text-sm" data-id="${expense.id}">Eliminar</button>
               </div>
             </div>
           </div>
@@ -769,7 +744,11 @@
     
     function showToast(message, type) {
       const toast = document.createElement('div');
+      // Toast colors are functional, keep green/red or use variables?
+      // "Estados financieros: Verde/Rojo". Notifications fit this.
+      const bgClass = type === 'success' ? 'theme-btn-income' : 'theme-btn-expense';
       toast.className = `fixed bottom-8 right-8 px-6 py-4 rounded-xl shadow-2xl text-white font-semibold animate-slide-in z-50 ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+      toast.style.backgroundColor = type === 'success' ? 'var(--color-income)' : 'var(--color-expense)';
       toast.textContent = message;
       document.body.appendChild(toast);
       
