@@ -351,6 +351,19 @@ let transactions = [];
           });
       });
 
+      // Refill Modal Listeners
+      const btnCancelRefill = document.getElementById('btn-cancel-refill');
+      if (btnCancelRefill) {
+          btnCancelRefill.addEventListener('click', () => {
+              document.getElementById('modal-refill').style.display = 'none';
+              document.getElementById('form-refill').reset();
+          });
+      }
+      const formRefill = document.getElementById('form-refill');
+      if (formRefill) {
+          formRefill.addEventListener('submit', handleRefillSubmit);
+      }
+
       // Withdraw Modal Listeners
       const btnCancelWithdraw = document.getElementById('btn-cancel-withdraw');
       if (btnCancelWithdraw) {
@@ -744,6 +757,54 @@ let transactions = [];
       submitButton.textContent = 'Crear';
     }
 
+    async function handleRefillSubmit(e) {
+        e.preventDefault();
+        const pbId = document.getElementById('refill-piggybank-id').value;
+        const amount = parseFloat(document.getElementById('refill-amount').value);
+        
+        const pb = piggybanks.get(pbId);
+        if (!pb) return;
+        
+        const btn = e.target.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.textContent = 'Procesando...';
+        
+        const timestamp = new Date().toISOString();
+
+        // 1. Expense from Global (Reduction)
+        const res1 = await apiCall('/api/transaction', 'POST', {
+            type: 'expense',
+            concept: `Asignación a presupuesto: ${pb.name}`,
+            amount: amount,
+            currency: pb.currency,
+            timestamp: timestamp,
+            piggybank_id: '' // Global
+        });
+        
+        // 2. Income to Piggybank (Addition)
+        const res2 = await apiCall('/api/transaction', 'POST', {
+            type: 'income',
+            concept: `Recarga de presupuesto`,
+            amount: amount,
+            currency: pb.currency,
+            timestamp: timestamp,
+            piggybank_id: pbId,
+            piggybank_name: pb.name,
+            piggybank_goal: pb.goal
+        });
+        
+        if (res1.success && res2.success) {
+            document.getElementById('modal-refill').style.display = 'none';
+            document.getElementById('form-refill').reset();
+            showToast('Presupuesto rellenado correctamente', 'success');
+            loadData();
+        } else {
+            showToast('Error al rellenar el presupuesto', 'error');
+        }
+        btn.disabled = false;
+        btn.textContent = 'Rellenar';
+    }
+
     async function handleWithdrawSubmit(e) {
         e.preventDefault();
         const pbId = document.getElementById('withdraw-piggybank-id').value;
@@ -759,11 +820,8 @@ let transactions = [];
         const timestamp = new Date().toISOString();
         
         let expenseConcept = 'Retirada de fondos';
-        let incomeConcept = `Reintegro desde ${pb.name}`;
-
         if (subject) {
             expenseConcept += `: ${subject}`;
-            incomeConcept += `: ${subject}`;
         }
         
         // 1. Expense from Piggybank (Reduce PB balance)
@@ -778,17 +836,9 @@ let transactions = [];
              piggybank_goal: pb.goal
         });
         
-        // 2. Income to Global (Increase Global balance)
-        const res2 = await apiCall('/api/transaction', 'POST', {
-             type: 'income',
-             concept: incomeConcept,
-             amount: amount,
-             currency: pb.currency,
-             timestamp: timestamp,
-             piggybank_id: ''
-        });
+        // Income to Global (res2) removed as per new instruction
         
-        if (res1.success && res2.success) {
+        if (res1.success) {
             document.getElementById('modal-withdraw').style.display = 'none';
             document.getElementById('form-withdraw').reset();
             showToast('Fondos retirados correctamente', 'success');
@@ -1192,9 +1242,9 @@ let transactions = [];
       document.querySelectorAll('.btn-refill-piggybank').forEach(btn => {
           btn.addEventListener('click', (e) => {
                const id = e.target.dataset.id;
-               document.getElementById('income-piggybank').value = id;
-               document.getElementById('modal-income').style.display = 'flex';
-               document.getElementById('income-concept').value = "Relleno de presupuesto";
+               document.getElementById('refill-piggybank-id').value = id;
+               document.getElementById('modal-refill').style.display = 'flex';
+               // Reset or prefill logic if needed
           });
       });
     }

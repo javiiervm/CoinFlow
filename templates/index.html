@@ -326,6 +326,24 @@
     </div>
    </div>
 
+   <!-- Modal for Refill Budget -->
+   <div id="modal-refill" class="fixed inset-0 bg-black/50 modal-backdrop hidden items-center justify-center z-50">
+    <div class="theme-bg-secondary rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 animate-slide-in theme-border border">
+     <h3 class="text-3xl font-bold theme-text-primary mb-6">📥 Rellenar Presupuesto</h3>
+     <form id="form-refill">
+      <input type="hidden" id="refill-piggybank-id">
+      <div class="mb-6"><label class="block theme-text-secondary font-semibold mb-2">Cantidad a rellenar</label> 
+          <input type="number" id="refill-amount" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-green-500" placeholder="0.00" required>
+          <p class="text-xs theme-text-secondary mt-2">Se descontará del saldo global.</p>
+      </div>
+      <div class="flex gap-3">
+          <button type="submit" class="flex-1 theme-btn-income font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Rellenar </button> 
+          <button type="button" id="btn-cancel-refill" class="flex-1 theme-btn-secondary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cancelar </button>
+      </div>
+     </form>
+    </div>
+   </div>
+
    <!-- Modal for Edit Transaction -->
    <div id="modal-edit" class="fixed inset-0 bg-black/50 modal-backdrop hidden items-center justify-center z-50">
     <div class="theme-bg-secondary rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 animate-slide-in theme-border border">
