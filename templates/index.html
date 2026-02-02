@@ -72,6 +72,42 @@
             <span class="text-3xl mr-2"></span> Cambio Divisa 
         </button>
     </div>
+
+    <!-- Filters Section -->
+    <div class="theme-bg-secondary rounded-3xl shadow-xl p-6 mb-8 theme-border border transition-colors duration-300">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+            <!-- Search -->
+            <div class="lg:col-span-4 relative">
+                <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">🔍</span>
+                <input type="text" id="filter-search" placeholder="Buscar por nombre..." class="w-full pl-10 pr-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500 bg-transparent">
+            </div>
+            
+            <!-- Sort -->
+            <div class="lg:col-span-2">
+                <select id="filter-sort" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500 bg-transparent">
+                    <option value="date-desc">📅 Fecha (Reciente)</option>
+                    <option value="date-asc">📅 Fecha (Antiguo)</option>
+                    <option value="amount-desc">💰 Cantidad (Mayor)</option>
+                    <option value="amount-asc">💰 Cantidad (Menor)</option>
+                </select>
+            </div>
+
+            <!-- Date Filter -->
+            <div class="lg:col-span-3 flex gap-2">
+                <input type="date" id="filter-date-start" class="w-full px-2 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500 bg-transparent text-sm" placeholder="Desde">
+                <input type="date" id="filter-date-end" class="w-full px-2 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500 bg-transparent text-sm" placeholder="Hasta">
+            </div>
+
+             <!-- Amount Filter & Reset -->
+             <div class="lg:col-span-3 flex gap-2 items-center">
+                <input type="number" id="filter-amount-min" class="w-full px-3 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500 bg-transparent text-sm" placeholder="Min €">
+                <input type="number" id="filter-amount-max" class="w-full px-3 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500 bg-transparent text-sm" placeholder="Max €">
+                <button id="btn-reset-filters" class="p-2 theme-text-expense hover:opacity-75 transition-opacity text-2xl font-bold leading-none" title="Restablecer filtros">
+                    ×
+                </button>
+            </div>
+        </div>
+    </div>
     
     <!-- Piggybanks Section -->
     <div id="piggybanks-section" class="mb-8">

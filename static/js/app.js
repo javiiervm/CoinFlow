@@ -73,9 +73,72 @@
         // No-op
     }
 
+    // Filter State
+    const filters = {
+        search: '',
+        sortBy: 'date-desc',
+        dateStart: null,
+        dateEnd: null,
+        amountMin: null,
+        amountMax: null
+    };
+
     let editingTransaction = null;
     
     function setupEventListeners() {
+      // Filters Listeners
+      const filterInputs = [
+          'filter-search', 'filter-sort', 
+          'filter-date-start', 'filter-date-end', 
+          'filter-amount-min', 'filter-amount-max'
+      ];
+      
+      filterInputs.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) {
+              el.addEventListener('input', (e) => {
+                  const key = id.replace('filter-', '');
+                  let value = e.target.value;
+                  
+                  // Map specific keys if needed, or handle generically
+                  if (id === 'filter-search') filters.search = value.toLowerCase();
+                  if (id === 'filter-sort') filters.sortBy = value;
+                  if (id === 'filter-date-start') filters.dateStart = value ? new Date(value) : null;
+                  if (id === 'filter-date-end') filters.dateEnd = value ? new Date(value) : null;
+                  if (id === 'filter-amount-min') filters.amountMin = value ? parseFloat(value) : null;
+                  if (id === 'filter-amount-max') filters.amountMax = value ? parseFloat(value) : null;
+                  
+                  // Debounce could be added here if dataset is huge, but for now direct update
+                  updateFilteredUI();
+              });
+          }
+      });
+
+      // Reset Filters
+      const btnResetFilters = document.getElementById('btn-reset-filters');
+      if (btnResetFilters) {
+          btnResetFilters.addEventListener('click', () => {
+              // Reset DOM elements
+              document.getElementById('filter-search').value = '';
+              document.getElementById('filter-sort').value = 'date-desc';
+              document.getElementById('filter-date-start').value = '';
+              document.getElementById('filter-date-end').value = '';
+              document.getElementById('filter-amount-min').value = '';
+              document.getElementById('filter-amount-max').value = '';
+
+              // Reset State
+              filters.search = '';
+              filters.sortBy = 'date-desc';
+              filters.dateStart = null;
+              filters.dateEnd = null;
+              filters.amountMin = null;
+              filters.amountMax = null;
+
+              updateFilteredUI();
+              showToast('Filtros restablecidos', 'success');
+          });
+      }
+
       // Theme Toggle
       const btnTheme = document.getElementById('btn-theme-toggle');
       if (btnTheme) {
@@ -513,9 +576,79 @@
     
     function updateUI() {
       updatePiggybanks();
-      updateBalance();
+      updateBalance(); // Balance usually shows TOTAL regardless of filters, or should it filter too? 
+                       // Usually dashboard balances are "Current State", not "Filtered View". 
+                       // I will keep Balance global for now as per standard dashboard UX.
       updateTransactionLists();
       updatePiggybankSelects();
+    }
+
+    function updateFilteredUI() {
+        renderPiggybanks();
+        updateTransactionLists();
+    }
+
+    function applyFiltersAndSort(items, type) {
+        let result = [...items];
+        
+        // 1. Search (Name/Concept)
+        if (filters.search) {
+            result = result.filter(item => {
+                const text = type === 'piggybank' ? item.name : item.concept;
+                return text.toLowerCase().includes(filters.search);
+            });
+        }
+
+        // 2. Date Range
+        if (filters.dateStart || filters.dateEnd) {
+            result = result.filter(item => {
+                const date = new Date(item.timestamp);
+                // Reset time for accurate comparison
+                date.setHours(0,0,0,0);
+                
+                let valid = true;
+                if (filters.dateStart) {
+                     const start = new Date(filters.dateStart);
+                     start.setHours(0,0,0,0);
+                     if (date < start) valid = false;
+                }
+                if (filters.dateEnd) {
+                     const end = new Date(filters.dateEnd);
+                     end.setHours(23,59,59,999); // End of day
+                     if (date > end) valid = false;
+                }
+                return valid;
+            });
+        }
+
+        // 3. Amount Range
+        if (filters.amountMin !== null || filters.amountMax !== null) {
+            result = result.filter(item => {
+                // For piggybanks, filter by GOAL (or current? Goal is more static)
+                const amount = type === 'piggybank' ? item.goal : item.amount;
+                
+                let valid = true;
+                if (filters.amountMin !== null && amount < filters.amountMin) valid = false;
+                if (filters.amountMax !== null && amount > filters.amountMax) valid = false;
+                return valid;
+            });
+        }
+
+        // 4. Sort
+        result.sort((a, b) => {
+            if (filters.sortBy.startsWith('date')) {
+                const dateA = new Date(a.timestamp);
+                const dateB = new Date(b.timestamp);
+                return filters.sortBy === 'date-desc' ? dateB - dateA : dateA - dateB;
+            } else if (filters.sortBy.startsWith('amount')) {
+                const amountA = type === 'piggybank' ? a.goal : a.amount;
+                const amountB = type === 'piggybank' ? b.goal : b.amount;
+                return filters.sortBy === 'amount-desc' ? amountB - amountA : amountA - amountB;
+            }
+            return 0;
+        });
+
+        return result;
     }
     
     function updateBalance() {
@@ -595,16 +728,30 @@
       const container = document.getElementById('piggybanks-container');
       const noPiggybanks = document.getElementById('no-piggybanks');
       
-      if (piggybanks.size === 0) {
+      const allPiggybanks = Array.from(piggybanks.values());
+      const filteredPiggybanks = applyFiltersAndSort(allPiggybanks, 'piggybank');
+
+      if (filteredPiggybanks.length === 0) {
         container.innerHTML = '';
-        noPiggybanks.style.display = 'block';
+        // Only show "No piggybanks" message if we really have none (empty state), 
+        // or maybe a "No results found" if filtered?
+        // For now using the existing message but adapting if needed.
+        // If we have data but filter hid it, we might want a different message.
+        if (piggybanks.size > 0) {
+             noPiggybanks.innerHTML = '<p class="text-xl">No se encontraron huchas con estos filtros.</p>';
+             noPiggybanks.style.display = 'block';
+        } else {
+             noPiggybanks.innerHTML = '<p class="text-xl">No tienes huchas creadas. ¡Crea una para empezar a ahorrar!</p>';
+             noPiggybanks.style.display = 'block';
+        }
         return;
       }
       
       noPiggybanks.style.display = 'none';
       container.innerHTML = '';
       
-      piggybanks.forEach((piggybank, id) => {
+      filteredPiggybanks.forEach((piggybank) => {
+        const id = piggybank.id;
         const displayCurrent = Math.min(piggybank.current, piggybank.goal);
         const percentage = (displayCurrent / piggybank.goal) * 100;
         const isCompleted = piggybank.completed;
@@ -718,15 +865,23 @@
       const noIncome = document.getElementById('no-income');
       const noExpenses = document.getElementById('no-expenses');
       
-      const incomes = transactions.filter(t => t.type === 'income');
-      const expenses = transactions.filter(t => t.type === 'expense');
+      const allIncomes = transactions.filter(t => t.type === 'income');
+      const allExpenses = transactions.filter(t => t.type === 'expense');
       
-      if (incomes.length === 0) {
+      const filteredIncomes = applyFiltersAndSort(allIncomes, 'transaction');
+      const filteredExpenses = applyFiltersAndSort(allExpenses, 'transaction');
+      
+      if (filteredIncomes.length === 0) {
         incomeList.innerHTML = '';
+        if (allIncomes.length > 0) {
+            noIncome.innerHTML = '<p>No hay ingresos que coincidan.</p>';
+        } else {
+            noIncome.innerHTML = '<p>No hay ingresos registrados</p>';
+        }
         noIncome.style.display = 'block';
       } else {
         noIncome.style.display = 'none';
-        incomeList.innerHTML = incomes.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).map(income => `
+        incomeList.innerHTML = filteredIncomes.map(income => `
           <div class="transaction-item theme-bg-secondary border-l-4 rounded-xl p-4 flex justify-between items-center mb-3 theme-border border shadow-sm" style="border-left-color: var(--color-income);">
             <div>
               <p class="font-semibold theme-text-primary">
@@ -747,12 +902,17 @@
         `).join('');
       }
       
-      if (expenses.length === 0) {
+      if (filteredExpenses.length === 0) {
         expenseList.innerHTML = '';
+        if (allExpenses.length > 0) {
+            noExpenses.innerHTML = '<p>No hay gastos que coincidan.</p>';
+        } else {
+            noExpenses.innerHTML = '<p>No hay gastos registrados</p>';
+        }
         noExpenses.style.display = 'block';
       } else {
         noExpenses.style.display = 'none';
-        expenseList.innerHTML = expenses.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).map(expense => `
+        expenseList.innerHTML = filteredExpenses.map(expense => `
           <div class="transaction-item theme-bg-secondary border-l-4 rounded-xl p-4 flex justify-between items-center mb-3 theme-border border shadow-sm" style="border-left-color: var(--color-expense);">
             <div>
               <p class="font-semibold theme-text-primary">
