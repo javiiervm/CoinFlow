@@ -11,11 +11,10 @@
    <img src="https://img.shields.io/badge/html5-E34F26?style=flat&logo=html5&logoColor=white" /> 
    <img src="https://img.shields.io/badge/css3-1572B6?style=flat&logo=css3&logoColor=white" /> 
    <img src="https://img.shields.io/badge/javascript-F7DF1E?style=flat&logo=javascript&logoColor=black" /> 
+   <br /><br /><br />
+   <b>CoinFlow</b> es una aplicación web de gestión financiera personal diseñada para ser simple, intuitiva y visualmente atractiva. Te permite llevar un control detallado de tus ingresos y gastos, gestionar tus ahorros mediante "huchas" y visualizar tu balance en diferentes divisas.
+   <br /><br />
 </div>
-
-# CoinFlow
-
-**CoinFlow** es una aplicación web de gestión financiera personal diseñada para ser simple, intuitiva y visualmente atractiva. Te permite llevar un control detallado de tus ingresos y gastos, gestionar tus ahorros mediante "huchas" y visualizar tu balance en diferentes divisas.
 
 ## 🚀 Características Principales
 
@@ -89,11 +88,3 @@ Sigue estos pasos para ejecutar CoinFlow en tu máquina local:
 
 5.  **Abrir en el navegador:**
     Visita `http://localhost:5000` (o la dirección que muestre la terminal) para empezar a usar CoinFlow.
-
-## 🤝 Contribución
-
-¡Las contribuciones son bienvenidas! Si tienes ideas para mejorar la aplicación, no dudes en abrir un *issue* o enviar un *pull request*.
-
-## 📄 Licencia
-
-Este proyecto es de uso personal y educativo.
