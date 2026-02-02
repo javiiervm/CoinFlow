@@ -62,6 +62,21 @@
     let editingTransaction = null;
     
     function setupEventListeners() {
+      const btnDeleteAll = document.getElementById('btn-delete-all');
+      if (btnDeleteAll) {
+          btnDeleteAll.addEventListener('click', async () => {
+            if (confirm('¿Estás seguro de que deseas borrar todos los datos?')) {
+                const result = await apiCall('/api/data', 'DELETE');
+                if (result && result.success) {
+                    showToast('Todos los datos han sido borrados', 'success');
+                    loadData();
+                } else {
+                    showToast('Error al borrar los datos', 'error');
+                }
+            }
+          });
+      }
+
       document.getElementById('btn-add-income').addEventListener('click', () => {
         updatePiggybankSelects();
         document.getElementById('modal-income').style.display = 'flex';

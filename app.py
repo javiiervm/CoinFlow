@@ -28,6 +28,12 @@ def get_data():
     data = load_data()
     return jsonify(data)
 
+@app.route('/api/data', methods=['DELETE'])
+def delete_all_data():
+    data = {'transactions': [], 'piggybanks': []}
+    save_data(data)
+    return jsonify({'success': True})
+
 @app.route('/api/transaction', methods=['POST'])
 def add_transaction():
     data = load_data()
