@@ -99,6 +99,36 @@ def add_piggybank():
     save_data(data)
     return jsonify({'success': True, 'piggybank': piggybank})
 
+@app.route('/api/piggybank', methods=['PUT'])
+def update_piggybank():
+    data = load_data()
+    updated_pb = request.json
+    
+    if 'id' not in updated_pb:
+         return jsonify({'success': False, 'message': 'ID required'}), 400
+         
+    for i, pb in enumerate(data['piggybanks']):
+        if pb['id'] == updated_pb['id']:
+            # Update fields
+            pb['concept'] = updated_pb.get('concept', pb['concept'])
+            pb['amount'] = updated_pb.get('amount', pb['amount'])
+            # Ensure currency matches or handle conversion (for now assume fixed currency)
+            data['piggybanks'][i] = pb
+            
+            # Also update the denormalized name/goal in transactions? 
+            # The current backend stores 'piggybank_name' in transactions for convenience, 
+            # but strictly it should be joined. The frontend handles logic mostly.
+            # But let's update them to keep data consistent if we rely on it.
+            for t in data['transactions']:
+                if t.get('piggybank_id') == pb['id']:
+                    t['piggybank_name'] = pb['concept']
+                    t['piggybank_goal'] = pb['amount']
+            
+            save_data(data)
+            return jsonify({'success': True})
+
+    return jsonify({'success': False, 'message': 'Piggybank not found'}), 404
+
 @app.route('/api/piggybank', methods=['DELETE'])
 def delete_piggybank():
     data = load_data()
@@ -108,11 +138,11 @@ def delete_piggybank():
     # Remove piggybank definition
     data['piggybanks'] = [p for p in data['piggybanks'] if p['id'] != p_id]
     
-    # Also unset piggybank_id from transactions associated with it
+    # Unset piggybank_id but KEEP piggybank_name for history
     for t in data['transactions']:
         if t.get('piggybank_id') == p_id:
             t['piggybank_id'] = ''
-            t['piggybank_name'] = ''
+            # t['piggybank_name'] = ''  <-- Removed this to preserve history
             
     save_data(data)
     return jsonify({'success': True})

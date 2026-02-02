@@ -64,7 +64,7 @@
         <button id="btn-add-expense" class="theme-btn-expense font-semibold py-4 px-6 rounded-2xl shadow-lg text-xl flex items-center justify-center transition-transform hover:scale-105"> 
             <span class="text-3xl mr-2">💸</span> Añadir Gasto 
         </button> 
-        <button id="btn-create-piggybank" class="theme-btn-primary font-semibold py-4 px-6 rounded-2xl shadow-lg text-xl flex items-center justify-center transition-transform hover:scale-105"> 
+        <button id="btn-create-piggybank" class="theme-btn-gold font-semibold py-4 px-6 rounded-2xl shadow-lg text-xl flex items-center justify-center transition-transform hover:scale-105"> 
             <span class="text-3xl mr-2">🐷</span> Crear Hucha 
         </button>
         <button id="btn-exchange" class="theme-btn-primary font-semibold py-4 px-6 rounded-2xl shadow-lg text-xl flex items-center justify-center transition-transform hover:scale-105"> 
@@ -167,15 +167,25 @@
       <div class="mb-6"><label class="block theme-text-secondary font-semibold mb-2">Divisa</label> 
           <select id="piggybank-currency" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500"> <option value="€">€ - Euro</option> <option value="$">$ - Dólar</option> </select>
       </div>
-      <div class="flex gap-3">
-          <button type="submit" class="flex-1 theme-btn-primary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Crear </button> 
-          <button type="button" id="btn-cancel-piggybank" class="flex-1 theme-btn-secondary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cancelar </button>
-      </div>
-     </form>
-    </div>
-   </div>
-
-   <!-- Modal for Exchange -->
+            <div class="flex gap-3"><button type="submit" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Crear </button> <button type="button" id="btn-cancel-piggybank" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cancelar </button>
+            </div>
+           </form>
+          </div>
+         </div><!-- Modal for Edit Piggybank -->
+         <div id="modal-piggybank-edit" class="fixed inset-0 bg-black/50 modal-backdrop hidden items-center justify-center z-50">
+          <div class="theme-bg-secondary rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 animate-slide-in theme-border border">
+           <h3 class="text-3xl font-bold theme-text-primary mb-6">✏️ Editar Hucha</h3>
+           <form id="form-piggybank-edit">
+            <input type="hidden" id="edit-piggybank-id">
+            <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Nombre</label> <input type="text" id="edit-piggybank-name" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" required>
+            </div>
+            <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Objetivo</label> <input type="number" id="edit-piggybank-goal" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" required>
+            </div>
+            <div class="flex gap-3"><button type="submit" class="flex-1 theme-btn-primary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Guardar </button> <button type="button" id="btn-cancel-piggybank-edit" class="flex-1 theme-btn-secondary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cancelar </button>
+            </div>
+           </form>
+          </div>
+         </div><!-- Modal for Exchange -->
    <div id="modal-exchange" class="fixed inset-0 bg-black/50 modal-backdrop hidden items-center justify-center z-50">
     <div class="theme-bg-secondary rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 animate-slide-in theme-border border">
      <h3 class="text-3xl font-bold theme-text-primary mb-6">💱 Cambio de Divisa</h3>

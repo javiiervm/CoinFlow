@@ -97,6 +97,13 @@
       background-color: var(--btn-secondary-bg);
       color: var(--btn-secondary-text);
     }
+    
+    .theme-btn-gold {
+      background-color: var(--color-accent);
+      color: #FFFFFF; /* Gold usually needs white or dark text. Prompt says Gold is #F1C40F. White might be low contrast on light yellow. Let's check contrast. #F1C40F is bright. Dark text might be better, but "Añadir hucha" usually implies primary action. Let's try white but maybe adjust if needed. Prompt says "Botones... Secundario...". Wait, the prompt table didn't specify a "Gold Button". It said "Acentos dinero: Oro". I'll make a custom class. */
+      color: #2C3E50; /* Dark text on yellow is safer for contrast */
+    }
+    .theme-btn-gold:hover { filter: brightness(1.05); }
 
     /* Override input styles for dark mode */
     input, select {

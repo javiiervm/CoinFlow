@@ -1,4 +1,5 @@
-let transactions = [];
+
+    let transactions = [];
     let piggybanks = new Map();
     
     // API Helper
@@ -147,6 +148,33 @@ let transactions = [];
             document.getElementById('form-exchange').reset();
           });
       }
+      
+      // Edit Piggybank Modal Listeners
+      document.getElementById('btn-cancel-piggybank-edit').addEventListener('click', () => {
+          document.getElementById('modal-piggybank-edit').style.display = 'none';
+          document.getElementById('form-piggybank-edit').reset();
+      });
+
+      document.getElementById('form-piggybank-edit').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const id = document.getElementById('edit-piggybank-id').value;
+          const name = document.getElementById('edit-piggybank-name').value;
+          const goal = parseFloat(document.getElementById('edit-piggybank-goal').value);
+          
+          const result = await apiCall('/api/piggybank', 'PUT', {
+              id,
+              concept: name,
+              amount: goal
+          });
+          
+          if (result && result.success) {
+              document.getElementById('modal-piggybank-edit').style.display = 'none';
+              showToast('Hucha actualizada', 'success');
+              loadData();
+          } else {
+              showToast('Error al actualizar', 'error');
+          }
+      });
 
       const exAmountFrom = document.getElementById('exchange-amount-from');
       const exRate = document.getElementById('exchange-rate');
@@ -586,14 +614,15 @@ let transactions = [];
         
         card.innerHTML = `
           <div class="flex justify-between items-start mb-4">
-            <div>
-              <h3 class="text-xl font-bold theme-text-primary">${piggybank.name}</h3>
+            <div class="flex-1 mr-2">
+              <h3 class="text-xl font-bold theme-text-primary truncate" title="${piggybank.name}">${piggybank.name}</h3>
               <p class="text-sm theme-text-secondary">Objetivo: ${piggybank.goal.toFixed(2)}${piggybank.currency || '€'}</p>
             </div>
-            <button class="delete-piggybank theme-text-expense hover:opacity-75 font-bold text-xl" data-id="${id}">×</button>
+            <div class="flex gap-2 shrink-0">
+                 <button class="edit-piggybank theme-text-secondary hover:text-blue-500 transition-colors" data-id="${id}" title="Editar">✏️</button>
+                 <button class="delete-piggybank theme-text-expense hover:opacity-75 font-bold text-xl leading-none" data-id="${id}" title="Eliminar">×</button>
+            </div>
           </div>
-          
-          ${isCompleted ? '<div class="absolute top-4 right-4"><span class="text-3xl">✅</span></div>' : ''}
           
           <div class="mb-3">
             <div class="flex justify-between text-sm mb-1">
@@ -605,7 +634,14 @@ let transactions = [];
             </div>
           </div>
           
-          ${isCompleted ? '<p class="theme-text-income font-semibold text-center">¡Objetivo completado! 🎉</p>' : ''}
+          ${isCompleted ? `
+            <div class="mt-4 text-center">
+                <p class="theme-text-income font-semibold mb-2">¡Objetivo completado! 🎉</p>
+                <button class="btn-spend-piggybank w-full py-2 px-4 rounded-xl theme-btn-expense font-semibold text-sm shadow-md transition-transform hover:scale-105" data-id="${id}">
+                   💸 Gastar hucha
+                </button>
+            </div>
+          ` : ''}
         `;
         
         container.appendChild(card);
@@ -629,6 +665,50 @@ let transactions = [];
             }
           }
         });
+      });
+
+      // Edit Listeners
+      document.querySelectorAll('.edit-piggybank').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+             const id = e.target.dataset.id;
+             const pb = piggybanks.get(id);
+             if (pb) {
+                 document.getElementById('edit-piggybank-id').value = id;
+                 document.getElementById('edit-piggybank-name').value = pb.name;
+                 document.getElementById('edit-piggybank-goal').value = pb.goal;
+                 document.getElementById('modal-piggybank-edit').style.display = 'flex';
+             }
+        });
+      });
+
+      // Spend Listeners
+      document.querySelectorAll('.btn-spend-piggybank').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+              const id = e.target.dataset.id;
+              const pb = piggybanks.get(id);
+              if (pb && confirm(`¿Quieres registrar el gasto de la hucha "${pb.name}"? Se creará un gasto por valor de ${pb.goal}${pb.currency}.`)) {
+                  // Create expense linked to this piggybank
+                  const result = await apiCall('/api/transaction', 'POST', {
+                      type: 'expense',
+                      concept: pb.name,
+                      amount: pb.goal,
+                      currency: pb.currency,
+                      timestamp: new Date().toISOString(),
+                      piggybank_id: id,
+                      piggybank_name: pb.name,
+                      piggybank_goal: pb.goal
+                  });
+                  
+                  if (result && result.success) {
+                      // Delete the piggybank after spending
+                      await apiCall('/api/piggybank', 'DELETE', { id: id });
+                      showToast('Hucha gastada y finalizada', 'success');
+                      loadData();
+                  } else {
+                      showToast('Error al registrar el gasto', 'error');
+                  }
+              }
+          });
       });
     }
     
