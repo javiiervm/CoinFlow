@@ -48,6 +48,11 @@ def add_transaction():
     if not all(k in new_transaction for k in required):
         return jsonify({'success': False, 'message': 'Missing fields'}), 400
 
+    # FORCE RULE: External transactions cannot have a piggybank
+    if new_transaction.get('external'):
+        new_transaction['piggybank_id'] = ''
+        new_transaction['create_piggybank'] = False # Disable creation if external
+
     # Handle "Create Piggybank from Expense" logic
     if new_transaction.get('create_piggybank') and new_transaction.get('new_piggybank_name'):
         new_pb_id = str(uuid.uuid4())
@@ -106,29 +111,59 @@ def update_transaction():
     # Find and update
     for i, t in enumerate(data['transactions']):
         if t['id'] == updated_transaction['id']:
+            
+            # FORCE RULE: External transactions cannot have a piggybank
+            if updated_transaction.get('external'):
+                # If it was previously linked to a piggybank, we might need to adjust that piggybank
+                prev_pb_id = t.get('piggybank_id')
+                if prev_pb_id:
+                     # Check if it was an Expense Tracker piggybank
+                     pb_index = next((idx for idx, p in enumerate(data['piggybanks']) if p['id'] == prev_pb_id), None)
+                     if pb_index is not None:
+                         pb = data['piggybanks'][pb_index]
+                         if pb.get('created_from_expense'):
+                             # Reduce the goal by the OLD amount (the amount that was contributing to it)
+                             pb['amount'] = max(0, pb['amount'] - t['amount'])
+                             data['piggybanks'][pb_index] = pb
+                             
+                             # Update all other transactions linked to this PB
+                             for other_t in data['transactions']:
+                                 if other_t.get('piggybank_id') == prev_pb_id:
+                                     other_t['piggybank_goal'] = pb['amount']
+
+                updated_transaction['piggybank_id'] = ''
+                updated_transaction['piggybank_name'] = ''
+                updated_transaction['piggybank_goal'] = 0
+
             # Handle Piggybank Goal updates for 'created_from_expense' types
-            pb_id = t.get('piggybank_id')
-            if pb_id and t['type'] == 'expense':
+            # Only proceed if NOT external (or if external logic didn't clear it already, though it did)
+            pb_id = updated_transaction.get('piggybank_id')
+            if pb_id and updated_transaction['type'] == 'expense' and not updated_transaction.get('external'):
                 # Find the piggybank
                 pb_index = next((idx for idx, p in enumerate(data['piggybanks']) if p['id'] == pb_id), None)
                 if pb_index is not None:
                     pb = data['piggybanks'][pb_index]
                     if pb.get('created_from_expense'):
-                        old_amount = t['amount']
-                        new_amount = updated_transaction['amount']
-                        diff = new_amount - old_amount
+                        # If the transaction was ALREADY in this piggybank, diff the amount
+                        if t.get('piggybank_id') == pb_id:
+                            old_amount = t['amount']
+                            new_amount = updated_transaction['amount']
+                            diff = new_amount - old_amount
+                            if diff != 0:
+                                pb['amount'] += diff
+                        # If it wasn't (e.g. was external or global before), add full amount
+                        else:
+                             pb['amount'] += updated_transaction['amount']
+
+                        data['piggybanks'][pb_index] = pb
                         
-                        if diff != 0:
-                            pb['amount'] += diff
-                            data['piggybanks'][pb_index] = pb
-                            
-                            # Update goal in current transaction object to be saved
-                            updated_transaction['piggybank_goal'] = pb['amount']
-                            
-                            # Update all other transactions linked to this PB
-                            for other_t in data['transactions']:
-                                if other_t.get('piggybank_id') == pb_id and other_t['id'] != t['id']:
-                                    other_t['piggybank_goal'] = pb['amount']
+                        # Update goal in current transaction object to be saved
+                        updated_transaction['piggybank_goal'] = pb['amount']
+                        
+                        # Update all other transactions linked to this PB
+                        for other_t in data['transactions']:
+                            if other_t.get('piggybank_id') == pb_id and other_t['id'] != t['id']:
+                                other_t['piggybank_goal'] = pb['amount']
 
             # Mark as edited
             updated_transaction['edited'] = True

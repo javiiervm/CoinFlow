@@ -192,6 +192,55 @@ let transactions = [];
               }
           });
       }
+
+      // External Toggle Listeners
+      const expenseExternal = document.getElementById('expense-external');
+      if (expenseExternal) {
+          expenseExternal.addEventListener('change', (e) => {
+              const pbSelect = document.getElementById('expense-piggybank');
+              const createPbCheck = document.getElementById('expense-create-piggybank');
+              const newPbContainer = document.getElementById('expense-new-piggybank-container');
+              
+              if (e.target.checked) {
+                  // Hide and Reset Piggybank options
+                  pbSelect.disabled = true;
+                  pbSelect.value = "";
+                  pbSelect.parentElement.classList.add('opacity-50', 'pointer-events-none'); // Visual disable
+                  
+                  createPbCheck.checked = false;
+                  createPbCheck.disabled = true;
+                  createPbCheck.parentElement.classList.add('opacity-50', 'pointer-events-none');
+                  
+                  newPbContainer.classList.add('hidden');
+              } else {
+                  // Restore
+                  pbSelect.disabled = false;
+                  pbSelect.parentElement.classList.remove('opacity-50', 'pointer-events-none');
+                  
+                  createPbCheck.disabled = false;
+                  createPbCheck.parentElement.classList.remove('opacity-50', 'pointer-events-none');
+              }
+          });
+      }
+
+      const editExternal = document.getElementById('edit-external');
+      if (editExternal) {
+          editExternal.addEventListener('change', (e) => {
+               const pbSelect = document.getElementById('edit-piggybank');
+               const label = document.getElementById('edit-piggybank-label');
+               
+               if (e.target.checked) {
+                   pbSelect.value = "";
+                   pbSelect.disabled = true;
+                   pbSelect.parentElement.classList.add('hidden');
+                   label.parentElement.classList.add('hidden');
+               } else {
+                   pbSelect.disabled = false;
+                   pbSelect.parentElement.classList.remove('hidden');
+                   label.parentElement.classList.remove('hidden');
+               }
+          });
+      }
       
       document.getElementById('btn-create-piggybank').addEventListener('click', () => {
         document.getElementById('modal-piggybank').style.display = 'flex';
@@ -370,19 +419,39 @@ let transactions = [];
       
       const modalTitle = document.getElementById('edit-modal-title');
       const piggybankLabel = document.getElementById('edit-piggybank-label');
+      const piggybankContainer = document.getElementById('edit-piggybank').parentElement; // Select container
       const externalContainer = document.getElementById('edit-external-container');
       const externalCheckbox = document.getElementById('edit-external');
+      const editPiggybankSelect = document.getElementById('edit-piggybank');
       
+      updateEditPiggybankSelect(); // Populate first
+      document.getElementById('edit-piggybank').value = transaction.piggybank_id || '';
+
       if (transaction.type === 'income') {
         modalTitle.textContent = '✏️ Editar Ingreso';
         piggybankLabel.textContent = '¿Destinar a una hucha?';
         externalContainer.classList.add('hidden');
         externalCheckbox.checked = false;
+        
+        // Always show piggybank select for income
+        piggybankContainer.classList.remove('hidden');
+        editPiggybankSelect.disabled = false;
+        
       } else {
         modalTitle.textContent = '✏️ Editar Gasto';
         piggybankLabel.textContent = '¿Pagar desde una hucha?';
         externalContainer.classList.remove('hidden');
         externalCheckbox.checked = !!transaction.external;
+        
+        // Logic for Expense External/Internal
+        if (transaction.external) {
+             piggybankContainer.classList.add('hidden');
+             editPiggybankSelect.disabled = true;
+             editPiggybankSelect.value = "";
+        } else {
+             piggybankContainer.classList.remove('hidden');
+             editPiggybankSelect.disabled = false;
+        }
       }
       
       document.getElementById('edit-concept').value = transaction.concept;
@@ -392,9 +461,6 @@ let transactions = [];
       const date = new Date(transaction.timestamp);
       const dateStr = date.toISOString().split('T')[0];
       document.getElementById('edit-date').value = dateStr;
-      
-      updateEditPiggybankSelect();
-      document.getElementById('edit-piggybank').value = transaction.piggybank_id || '';
       
       document.getElementById('modal-edit').style.display = 'flex';
     }
