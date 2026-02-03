@@ -249,19 +249,21 @@ def update_piggybank():
 def delete_piggybank():
     data = load_data()
     req = request.json
-    p_id = str(req.get('id')) # Ensure string for comparison
+    p_id = str(req.get('id', '')).strip()
     
     # Find the piggybank to check its type
-    pb_to_delete = next((p for p in data['piggybanks'] if p['id'] == p_id), None)
+    pb_to_delete = next((p for p in data['piggybanks'] if str(p.get('id', '')).strip() == p_id), None)
     is_expense_tracker = pb_to_delete.get('created_from_expense') if pb_to_delete else False
 
     # Remove piggybank definition
-    data['piggybanks'] = [p for p in data['piggybanks'] if p['id'] != p_id]
+    data['piggybanks'] = [p for p in data['piggybanks'] if str(p.get('id', '')).strip() != p_id]
     
     # Unset piggybank_id but KEEP piggybank_name for history
     for t in data['transactions']:
-        if t.get('piggybank_id') == p_id:
-            t['piggybank_id'] = ''
+        # Compare stripped strings to ensure match
+        t_pb_id = str(t.get('piggybank_id', '')).strip()
+        if t_pb_id == p_id:
+            t['piggybank_id'] = None 
             # If it was an expense tracker, we mark transactions as external 
             # so they don't affect global balance retroactively upon unlinking
             if is_expense_tracker:

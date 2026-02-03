@@ -1089,8 +1089,12 @@ let transactions = [];
              const totalIncome = incomes.reduce((sum, t) => sum + t.amount, 0);
              const totalExpense = expenses.reduce((sum, t) => sum + t.amount, 0);
              
+             // Calculate composition of funds
+             const totalInternal = incomes.filter(t => !t.external).reduce((sum, t) => sum + t.amount, 0);
+             
              pb.totalIncome = totalIncome;
              pb.totalExpense = totalExpense;
+             pb.totalInternal = totalInternal; // Store for spend logic
              pb.overflow = 0; // Initialize
 
              if (pb.created_from_expense) {
@@ -1331,19 +1335,48 @@ let transactions = [];
               const id = e.target.dataset.id;
               const pb = piggybanks.get(id);
               if (pb && confirm(`¿Quieres registrar el gasto de la hucha "${pb.name}"? Se creará un gasto por valor de ${pb.goal}${pb.currency}.`)) {
-                  // Create expense linked to this piggybank
-                  const result = await apiCall('/api/transaction', 'POST', {
-                      type: 'expense',
-                      concept: pb.name,
-                      amount: pb.goal,
-                      currency: pb.currency,
-                      timestamp: new Date().toISOString(),
-                      piggybank_id: id,
-                      piggybank_name: pb.name,
-                      piggybank_goal: pb.goal
-                  });
                   
-                  if (result && result.success) {
+                  // Calculate split based on source of funds to preserve Global Balance neutrality
+                  // We prioritize using Internal funds up to the amount available, then External.
+                  // This ensures that if we release Internal Income (by deleting PB), we match it with Internal Expense.
+                  const amountInternal = Math.max(0, Math.min(pb.goal, pb.totalInternal));
+                  const amountExternal = Math.max(0, pb.goal - amountInternal);
+                  
+                  let success = true;
+
+                  // 1. Internal Expense
+                  if (amountInternal > 0) {
+                      const res = await apiCall('/api/transaction', 'POST', {
+                          type: 'expense',
+                          concept: pb.name,
+                          amount: amountInternal,
+                          currency: pb.currency,
+                          timestamp: new Date().toISOString(),
+                          piggybank_id: id,
+                          piggybank_name: pb.name,
+                          piggybank_goal: pb.goal,
+                          external: false
+                      });
+                      if (!res || !res.success) success = false;
+                  }
+                  
+                  // 2. External Expense
+                  if (success && amountExternal > 0) {
+                      const res = await apiCall('/api/transaction', 'POST', {
+                          type: 'expense',
+                          concept: pb.name, // Keep same name or append (Externo)? Keeping same clean.
+                          amount: amountExternal,
+                          currency: pb.currency,
+                          timestamp: new Date().toISOString(),
+                          piggybank_id: id,
+                          piggybank_name: pb.name,
+                          piggybank_goal: pb.goal,
+                          external: true
+                      });
+                      if (!res || !res.success) success = false;
+                  }
+                  
+                  if (success) {
                       // Delete the piggybank after spending
                       await apiCall('/api/piggybank', 'DELETE', { id: id });
                       showToast('Hucha gastada y finalizada', 'success');
