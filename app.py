@@ -265,9 +265,13 @@ def delete_piggybank():
         if t_pb_id == p_id:
             t['piggybank_id'] = None 
             # If it was an expense tracker, we mark transactions as external 
-            # so they don't affect global balance retroactively upon unlinking
+            # so they don't affect global balance retroactively upon unlinking.
+            # For Savings and Budget, we mark them as internal (False) so their
+            # remaining balance is reintegrated into the global balance.
             if is_expense_tracker:
                 t['external'] = True
+            else:
+                t['external'] = False
             
     save_data(data)
     return jsonify({'success': True})
