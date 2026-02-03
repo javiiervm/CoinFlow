@@ -258,19 +258,39 @@ def delete_piggybank():
     # Remove piggybank definition
     data['piggybanks'] = [p for p in data['piggybanks'] if str(p.get('id', '')).strip() != p_id]
     
+    # Calculate balance of the piggybank being deleted to determine completion status for Expense Trackers
+    pb_balance = 0
+    pb_transactions = [t for t in data['transactions'] if str(t.get('piggybank_id', '')).strip() == p_id]
+    
+    for t in pb_transactions:
+        amount = t['amount']
+        if t['type'] == 'income':
+            pb_balance += amount
+        else:
+            pb_balance -= amount
+            
+    is_completed = pb_balance >= 0
+
     # Unset piggybank_id but KEEP piggybank_name for history
     for t in data['transactions']:
         # Compare stripped strings to ensure match
         t_pb_id = str(t.get('piggybank_id', '')).strip()
         if t_pb_id == p_id:
             t['piggybank_id'] = None 
-            # If it was an expense tracker, we mark transactions as external 
-            # so they don't affect global balance retroactively upon unlinking.
-            # For Savings and Budget, we mark them as internal (False) so their
-            # remaining balance is reintegrated into the global balance.
+            
             if is_expense_tracker:
-                t['external'] = True
+                if is_completed:
+                    # If completed, we integrate everything to history.
+                    # Income (+X) and Expense (-X) cancel out in Global Balance.
+                    t['external'] = False
+                else:
+                    # If incomplete (debt exists), we cancel the debt but refund payments.
+                    if t['type'] == 'income':
+                        t['external'] = False # Refund payment to global
+                    else:
+                        t['external'] = True  # Cancel debt (hide expense)
             else:
+                # Savings/Budget: Always integrate to global
                 t['external'] = False
             
     save_data(data)
