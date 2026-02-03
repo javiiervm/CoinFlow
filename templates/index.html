@@ -148,7 +148,7 @@
           <input type="text" id="income-concept" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-green-500" placeholder="Ej: Salario" required>
       </div>
       <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Cantidad</label> 
-          <input type="number" id="income-amount" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-green-500" placeholder="0.00" required>
+          <input type="number" id="income-amount" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-green-500" placeholder="0.00" required>
       </div>
       <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Divisa</label> 
           <select id="income-currency" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-green-500"> <option value="€">€ - Euro</option> <option value="$">$ - Dólar</option> </select>
@@ -181,7 +181,7 @@
           <input type="text" id="expense-concept" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-red-500" placeholder="Ej: Compra supermercado" required>
       </div>
       <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Cantidad</label> 
-          <input type="number" id="expense-amount" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-red-500" placeholder="0.00" required>
+          <input type="number" id="expense-amount" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-red-500" placeholder="0.00" required>
       </div>
       <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Divisa</label> 
           <select id="expense-currency" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-red-500"> <option value="€">€ - Euro</option> <option value="$">$ - Dólar</option> </select>
@@ -242,14 +242,14 @@
       <!-- Savings Fields -->
       <div id="piggybank-savings-fields">
           <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Objetivo</label> 
-              <input type="number" id="piggybank-goal" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" placeholder="0.00">
+              <input type="number" id="piggybank-goal" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" placeholder="0.00">
           </div>
       </div>
 
       <!-- Budget Fields -->
       <div id="piggybank-budget-fields" class="hidden">
           <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Cantidad Inicial</label> 
-              <input type="number" id="piggybank-start-amount" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" placeholder="0.00">
+              <input type="number" id="piggybank-start-amount" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" placeholder="0.00">
           </div>
           <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Origen de los fondos</label> 
               <select id="piggybank-source" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500">
@@ -279,7 +279,7 @@
           <input type="text" id="withdraw-subject" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" placeholder="Ej: Cena">
       </div>
       <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Cantidad</label> 
-          <input type="number" id="withdraw-amount" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" placeholder="0.00" required>
+          <input type="number" id="withdraw-amount" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" placeholder="0.00" required>
       </div>
       
       <div id="withdraw-transfer-container" class="flex items-center gap-3 mb-6 p-3 rounded-xl theme-bg-primary bg-opacity-50 border theme-border">
@@ -305,7 +305,7 @@
             <input type="hidden" id="edit-piggybank-id">
             <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Nombre</label> <input type="text" id="edit-piggybank-name" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" required>
             </div>
-            <div id="edit-piggybank-goal-container" class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Objetivo</label> <input type="number" id="edit-piggybank-goal" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500">
+            <div id="edit-piggybank-goal-container" class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Objetivo</label> <input type="number" id="edit-piggybank-goal" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500">
             </div>
             <div class="flex gap-3"><button type="submit" class="flex-1 theme-btn-primary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Guardar </button> <button type="button" id="btn-cancel-piggybank-edit" class="flex-1 theme-btn-secondary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cancelar </button>
             </div>
@@ -319,7 +319,7 @@
        <div class="grid grid-cols-2 gap-4">
           <div class="mb-4">
               <label class="block theme-text-secondary font-semibold mb-2">Vender (Origen)</label> 
-              <input type="number" id="exchange-amount-from" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" placeholder="0.00" required>
+              <input type="number" id="exchange-amount-from" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" placeholder="0.00" required>
               <select id="exchange-currency-from" class="w-full px-4 py-3 mt-2 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500"> <option value="€">€ - Euro</option> <option value="$">$ - Dólar</option> </select>
           </div>
           <div class="mb-4">
@@ -348,7 +348,7 @@
      <form id="form-refill">
       <input type="hidden" id="refill-piggybank-id">
       <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Cantidad a rellenar</label> 
-          <input type="number" id="refill-amount" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-green-500" placeholder="0.00" required>
+          <input type="number" id="refill-amount" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-green-500" placeholder="0.00" required>
       </div>
       <div class="mb-6"><label class="block theme-text-secondary font-semibold mb-2">Origen de los fondos</label> 
           <select id="refill-source" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-green-500">
@@ -373,7 +373,7 @@
           <input type="text" id="edit-concept" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" required>
       </div>
       <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Cantidad</label> 
-          <input type="number" id="edit-amount" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" required>
+          <input type="number" id="edit-amount" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" required>
       </div>
       <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Divisa</label> 
           <select id="edit-currency" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500"> <option value="€">€ - Euro</option> <option value="$">$ - Dólar</option> </select>

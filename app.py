@@ -52,6 +52,9 @@ def add_transaction():
     if not all(k in new_transaction for k in required):
         return jsonify({'success': False, 'message': 'Missing fields'}), 400
 
+    if new_transaction['amount'] < 0:
+        return jsonify({'success': False, 'message': 'Amount must be non-negative'}), 400
+
     # FORCE RULE: External EXPENSES cannot have a piggybank
     if new_transaction.get('external') and new_transaction.get('type') == 'expense':
         new_transaction['piggybank_id'] = ''
@@ -112,6 +115,9 @@ def update_transaction():
     if 'id' not in updated_transaction:
         return jsonify({'success': False, 'message': 'ID required'}), 400
         
+    if updated_transaction.get('amount', 0) < 0:
+        return jsonify({'success': False, 'message': 'Amount must be non-negative'}), 400
+
     # Find and update
     for i, t in enumerate(data['transactions']):
         if t['id'] == updated_transaction['id']:
@@ -215,6 +221,9 @@ def add_piggybank():
     if 'id' not in piggybank or not piggybank['id']:
         piggybank['id'] = str(uuid.uuid4())
         
+    if piggybank.get('amount', 0) < 0:
+        return jsonify({'success': False, 'message': 'Amount must be non-negative'}), 400
+
     data['piggybanks'].append(piggybank)
     save_data(data)
     return jsonify({'success': True, 'piggybank': piggybank})
@@ -226,7 +235,10 @@ def update_piggybank():
     
     if 'id' not in updated_pb:
          return jsonify({'success': False, 'message': 'ID required'}), 400
-         
+    
+    if updated_pb.get('amount', 0) < 0:
+        return jsonify({'success': False, 'message': 'Amount must be non-negative'}), 400
+
     for i, pb in enumerate(data['piggybanks']):
         if pb['id'] == updated_pb['id']:
             # Update fields
@@ -308,6 +320,9 @@ def exchange_currency():
     # Needs: amountFrom, currencyFrom, amountTo, currencyTo
     if not all(k in req for k in ['amountFrom', 'currencyFrom', 'amountTo', 'currencyTo']):
          return jsonify({'success': False, 'message': 'Missing exchange data'}), 400
+
+    if req['amountFrom'] < 0 or req['amountTo'] < 0:
+        return jsonify({'success': False, 'message': 'Amount must be non-negative'}), 400
 
     timestamp = req.get('timestamp')
     

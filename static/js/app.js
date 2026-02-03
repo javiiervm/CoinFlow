@@ -317,6 +317,11 @@ let transactions = [];
           const name = document.getElementById('edit-piggybank-name').value;
           const goal = parseFloat(document.getElementById('edit-piggybank-goal').value);
           
+          if (goal < 0) {
+              showToast('El objetivo no puede ser negativo', 'error');
+              return;
+          }
+
           const result = await apiCall('/api/piggybank', 'PUT', {
               id,
               concept: name,
@@ -526,6 +531,12 @@ let transactions = [];
       
       const concept = document.getElementById('edit-concept').value;
       const amount = parseFloat(document.getElementById('edit-amount').value);
+
+      if (amount < 0) {
+          showToast('La cantidad no puede ser negativa', 'error');
+          return;
+      }
+
       const currency = document.getElementById('edit-currency').value;
       const dateValue = document.getElementById('edit-date').value;
       const piggybankId = document.getElementById('edit-piggybank').value;
@@ -582,6 +593,12 @@ let transactions = [];
       
       const concept = document.getElementById('income-concept').value;
       const amount = parseFloat(document.getElementById('income-amount').value);
+
+      if (amount < 0) {
+          showToast('La cantidad no puede ser negativa', 'error');
+          return;
+      }
+
       const currency = document.getElementById('income-currency').value;
       const piggybankId = document.getElementById('income-piggybank').value;
       const isExternal = document.getElementById('income-external').checked;
@@ -635,6 +652,12 @@ let transactions = [];
       
       const concept = document.getElementById('expense-concept').value;
       const amount = parseFloat(document.getElementById('expense-amount').value);
+
+      if (amount < 0) {
+          showToast('La cantidad no puede ser negativa', 'error');
+          return;
+      }
+
       const currency = document.getElementById('expense-currency').value;
       const isExternal = document.getElementById('expense-external').checked;
       
@@ -725,6 +748,11 @@ let transactions = [];
           source = document.getElementById('piggybank-source').value;
           goal = 0; // Budget doesn't have a goal
       }
+
+      if (goal < 0 || initialAmount < 0) {
+          showToast('La cantidad no puede ser negativa', 'error');
+          return;
+      }
       
       const pbId = Date.now().toString();
       
@@ -790,6 +818,12 @@ let transactions = [];
         e.preventDefault();
         const pbId = document.getElementById('refill-piggybank-id').value;
         const amount = parseFloat(document.getElementById('refill-amount').value);
+
+        if (amount < 0) {
+            showToast('La cantidad no puede ser negativa', 'error');
+            return;
+        }
+
         const source = document.getElementById('refill-source').value;
         
         const pb = piggybanks.get(pbId);
@@ -853,6 +887,12 @@ let transactions = [];
         e.preventDefault();
         const pbId = document.getElementById('withdraw-piggybank-id').value;
         const amount = parseFloat(document.getElementById('withdraw-amount').value);
+
+        if (amount < 0) {
+            showToast('La cantidad no puede ser negativa', 'error');
+            return;
+        }
+
         const subject = document.getElementById('withdraw-subject').value.trim();
         const toGlobal = document.getElementById('withdraw-to-global').checked;
         const pb = piggybanks.get(pbId);
@@ -916,6 +956,11 @@ let transactions = [];
       const amountTo = parseFloat(document.getElementById('exchange-amount-to').value);
       const currencyTo = document.getElementById('exchange-currency-to').value;
       
+      if (amountFrom < 0) {
+          showToast('La cantidad no puede ser negativa', 'error');
+          return;
+      }
+
       if (currencyFrom === currencyTo) {
           showToast('Las divisas deben ser diferentes', 'error');
           return;
