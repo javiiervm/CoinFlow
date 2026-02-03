@@ -163,6 +163,11 @@ let transactions = [];
       document.getElementById('btn-add-income').addEventListener('click', () => {
         updatePiggybankSelects();
         document.getElementById('modal-income').style.display = 'flex';
+        // Reset state on open
+        document.getElementById('income-piggybank').disabled = false;
+        document.getElementById('income-external').checked = false;
+        const incomePbSelect = document.getElementById('income-piggybank');
+        incomePbSelect.parentElement.classList.remove('opacity-50', 'pointer-events-none');
       });
       
       document.getElementById('btn-add-expense').addEventListener('click', () => {
@@ -219,6 +224,23 @@ let transactions = [];
                   
                   createPbCheck.disabled = false;
                   createPbCheck.parentElement.classList.remove('opacity-50', 'pointer-events-none');
+              }
+          });
+      }
+
+      // Income External Listener
+      const incomeExternal = document.getElementById('income-external');
+      if (incomeExternal) {
+          incomeExternal.addEventListener('change', (e) => {
+              const pbSelect = document.getElementById('income-piggybank');
+              
+              if (e.target.checked) {
+                  pbSelect.disabled = true;
+                  pbSelect.value = "";
+                  pbSelect.parentElement.classList.add('opacity-50', 'pointer-events-none');
+              } else {
+                  pbSelect.disabled = false;
+                  pbSelect.parentElement.classList.remove('opacity-50', 'pointer-events-none');
               }
           });
       }
@@ -443,28 +465,22 @@ let transactions = [];
       if (transaction.type === 'income') {
         modalTitle.textContent = '✏️ Editar Ingreso';
         piggybankLabel.textContent = '¿Destinar a una hucha?';
-        externalContainer.classList.add('hidden');
-        externalCheckbox.checked = false;
-        
-        // Always show piggybank select for income
-        piggybankContainer.classList.remove('hidden');
-        editPiggybankSelect.disabled = false;
-        
       } else {
         modalTitle.textContent = '✏️ Editar Gasto';
         piggybankLabel.textContent = '¿Pagar desde una hucha?';
-        externalContainer.classList.remove('hidden');
-        externalCheckbox.checked = !!transaction.external;
-        
-        // Logic for Expense External/Internal
-        if (transaction.external) {
-             piggybankContainer.classList.add('hidden');
-             editPiggybankSelect.disabled = true;
-             editPiggybankSelect.value = "";
-        } else {
-             piggybankContainer.classList.remove('hidden');
-             editPiggybankSelect.disabled = false;
-        }
+      }
+      
+      // Shared logic for External/Piggybank visibility
+      externalContainer.classList.remove('hidden');
+      externalCheckbox.checked = !!transaction.external;
+      
+      if (transaction.external) {
+           piggybankContainer.classList.add('hidden');
+           editPiggybankSelect.disabled = true;
+           editPiggybankSelect.value = "";
+      } else {
+           piggybankContainer.classList.remove('hidden');
+           editPiggybankSelect.disabled = false;
       }
       
       document.getElementById('edit-concept').value = transaction.concept;
@@ -568,6 +584,7 @@ let transactions = [];
       const amount = parseFloat(document.getElementById('income-amount').value);
       const currency = document.getElementById('income-currency').value;
       const piggybankId = document.getElementById('income-piggybank').value;
+      const isExternal = document.getElementById('income-external').checked;
       
       const submitButton = e.target.querySelector('button[type="submit"]');
       submitButton.disabled = true;
@@ -589,6 +606,7 @@ let transactions = [];
         concept,
         amount,
         currency,
+        external: isExternal,
         timestamp: new Date().toISOString(),
         piggybank_id: piggybankId || '',
         piggybank_name: piggybankName,
@@ -601,6 +619,10 @@ let transactions = [];
       if (result && result.success) {
         document.getElementById('modal-income').style.display = 'none';
         document.getElementById('form-income').reset();
+        document.getElementById('income-external').checked = false; // Reset checkbox
+        const incomePbSelect = document.getElementById('income-piggybank');
+        incomePbSelect.disabled = false; // Reset select
+        incomePbSelect.parentElement.classList.remove('opacity-50', 'pointer-events-none');
         showToast('Ingreso añadido correctamente', 'success');
         loadData();
       } else {
@@ -727,6 +749,7 @@ let transactions = [];
                   concept: 'Saldo Inicial',
                   amount: initialAmount,
                   currency: currency,
+                  external: source === 'new',
                   timestamp: timestamp,
                   piggybank_id: pbId,
                   piggybank_name: name,
@@ -797,6 +820,7 @@ let transactions = [];
             concept: source === 'new' ? `Recarga externa de presupuesto` : `Recarga de presupuesto`,
             amount: amount,
             currency: pb.currency,
+            external: source === 'new',
             timestamp: timestamp,
             piggybank_id: pbId,
             piggybank_name: pb.name,
@@ -993,7 +1017,7 @@ let transactions = [];
       const euroBalance = { income: 0, expense: 0 };
       const dollarBalance = { income: 0, expense: 0 };
       
-      const incomes = transactions.filter(t => t.type === 'income');
+      const incomes = transactions.filter(t => t.type === 'income' && !t.external);
       const expenses = transactions.filter(t => t.type === 'expense' && !t.external);
       
       incomes.forEach(income => {
@@ -1317,17 +1341,18 @@ let transactions = [];
       } else {
         noIncome.style.display = 'none';
         incomeList.innerHTML = filteredIncomes.map(income => `
-          <div class="transaction-item theme-bg-secondary border-l-4 rounded-xl p-4 flex justify-between items-center mb-3 theme-border border shadow-sm" style="border-left-color: var(--color-income);">
+          <div class="transaction-item theme-bg-secondary border-l-4 rounded-xl p-4 flex justify-between items-center mb-3 theme-border border shadow-sm" style="border-left-color: ${income.external ? 'gray' : 'var(--color-income)'};">
             <div>
               <p class="font-semibold theme-text-primary">
                 ${income.concept}
                 ${income.edited ? '<span class="text-xs theme-btn-primary text-white px-2 py-0.5 rounded-full ml-2">Editado</span>' : ''}
+                ${income.external ? '<span class="text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full ml-2">Externo</span>' : ''}
               </p>
               ${income.piggybank_name ? `<p class="text-xs theme-text-secondary">→ ${income.piggybank_name}</p>` : ''}
               <p class="text-xs theme-text-secondary">${new Date(income.timestamp).toLocaleDateString()}</p>
             </div>
             <div class="text-right">
-              <p class="font-bold theme-text-income text-lg">+${income.amount.toFixed(2)}${income.currency || '€'}</p>
+              <p class="font-bold text-lg" style="color: ${income.external ? 'var(--text-secondary)' : 'var(--color-income)'}">+${income.amount.toFixed(2)}${income.currency || '€'}</p>
               <div class="flex gap-2 justify-end mt-1">
                 <button class="edit-transaction theme-text-secondary hover:text-blue-500 text-sm" data-id="${income.id}">Editar</button>
                 <button class="delete-transaction theme-text-secondary hover:text-red-500 text-sm" data-id="${income.id}">Eliminar</button>

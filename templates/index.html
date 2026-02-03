@@ -154,6 +154,14 @@
       <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Divisa</label> 
           <select id="income-currency" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-green-500"> <option value="€">€ - Euro</option> <option value="$">$ - Dólar</option> </select>
       </div>
+
+      <div class="flex items-center gap-3 mb-6 p-3 rounded-xl theme-bg-primary bg-opacity-50 border theme-border">
+          <input type="checkbox" id="income-external" class="w-5 h-5 accent-green-500 rounded focus:ring-green-500 cursor-pointer">
+          <label for="income-external" class="theme-text-primary text-sm font-medium cursor-pointer select-none">
+              Ingreso externo <span class="block text-xs theme-text-secondary font-normal">No se suma al saldo total</span>
+          </label>
+      </div>
+
       <div class="mb-6"><label class="block theme-text-secondary font-semibold mb-2">¿Destinar a una hucha?</label> 
           <select id="income-piggybank" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-green-500"> <option value="">No, al saldo global</option> </select>
       </div>
