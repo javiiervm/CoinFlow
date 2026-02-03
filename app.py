@@ -77,7 +77,7 @@ def add_transaction():
         
     # Handle "Add to existing Expense-Type Piggybank" logic
     elif new_transaction.get('piggybank_id'):
-        pb_id = new_transaction['piggybank_id']
+        pb_id = str(new_transaction['piggybank_id'])
         # Find the piggybank
         for i, pb in enumerate(data['piggybanks']):
             if pb['id'] == pb_id:
@@ -137,7 +137,7 @@ def update_transaction():
 
             # Handle Piggybank Goal updates for 'created_from_expense' types
             # Only proceed if NOT external (or if external logic didn't clear it already, though it did)
-            pb_id = updated_transaction.get('piggybank_id')
+            pb_id = str(updated_transaction.get('piggybank_id')) if updated_transaction.get('piggybank_id') else None
             if pb_id and updated_transaction['type'] == 'expense' and not updated_transaction.get('external'):
                 # Find the piggybank
                 pb_index = next((idx for idx, p in enumerate(data['piggybanks']) if p['id'] == pb_id), None)
@@ -249,7 +249,7 @@ def update_piggybank():
 def delete_piggybank():
     data = load_data()
     req = request.json
-    p_id = req.get('id')
+    p_id = str(req.get('id')) # Ensure string for comparison
     
     # Find the piggybank to check its type
     pb_to_delete = next((p for p in data['piggybanks'] if p['id'] == p_id), None)

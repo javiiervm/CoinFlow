@@ -51,7 +51,7 @@ let transactions = [];
     }
     
     async function loadData() {
-      const data = await apiCall('/api/data');
+      const data = await apiCall('/api/data?t=' + Date.now());
       if (data) {
         transactions = data.transactions || [];
         piggybanks.clear();
@@ -817,8 +817,11 @@ let transactions = [];
         let concept = '';
         if (pb.type === 'budget') {
             concept = source === 'new' ? `Recarga externa de presupuesto` : `Recarga de presupuesto`;
-        } else {
+        } else if (pb.created_from_expense) {
             concept = source === 'new' ? `Aportación externa a: ${pb.name}` : `Aportación a: ${pb.name}`;
+        } else {
+            // Savings
+            concept = source === 'new' ? `Ahorro externo para: ${pb.name}` : `Ahorro para: ${pb.name}`;
         }
 
         // 2. Income to Piggybank (Addition)
@@ -1043,10 +1046,9 @@ let transactions = [];
       
       // Overflow logic ONLY for Savings Piggybanks
       piggybanks.forEach((pb, id) => {
-          if (pb.type === 'savings' && pb.current > pb.goal && pb.goal > 0) {
-              const overflow = pb.current - pb.goal;
-              if (pb.currency === '€') euroBalance.income += overflow;
-              if (pb.currency === '$') dollarBalance.income += overflow;
+          if (pb.type === 'savings' && !pb.created_from_expense && pb.overflow > 0) {
+              if (pb.currency === '€') euroBalance.income += pb.overflow;
+              if (pb.currency === '$') dollarBalance.income += pb.overflow;
           }
       });
 
@@ -1087,17 +1089,24 @@ let transactions = [];
              const totalIncome = incomes.reduce((sum, t) => sum + t.amount, 0);
              const totalExpense = expenses.reduce((sum, t) => sum + t.amount, 0);
              
-             let rawCurrent = totalIncome - totalExpense;
-             pb.current = rawCurrent; 
-             pb.spent = totalExpense;
              pb.totalIncome = totalIncome;
-             
+             pb.totalExpense = totalExpense;
+             pb.overflow = 0; // Initialize
+
              if (pb.created_from_expense) {
-                 pb.completed = rawCurrent >= 0; 
+                 pb.current = totalIncome - totalExpense;
+                 pb.completed = pb.current >= 0; 
              } else if (pb.type === 'budget') {
-                 pb.completed = false; // Budgets are never "completed" in the savings sense
+                 pb.current = totalIncome - totalExpense;
+                 pb.completed = false; 
              } else {
-                 pb.completed = rawCurrent >= pb.goal && pb.goal > 0;
+                 // Savings Hucha Logic: 
+                 // 1. Incomes up to the goal stay in the hucha.
+                 // 2. Incomes above the goal go to global balance (overflow).
+                 // 3. Expenses always subtract from the hucha's part.
+                 pb.overflow = Math.max(0, totalIncome - pb.goal);
+                 pb.current = Math.min(totalIncome, pb.goal) - totalExpense;
+                 pb.completed = pb.current >= pb.goal && pb.goal > 0;
              }
         });
         
@@ -1189,15 +1198,8 @@ let transactions = [];
         
         let footerActions = '';
         
-        if (isCompleted && !isBudget && !isExpenseTracker) {
-             footerActions = `
-                <div class="mt-4 text-center">
-                    <p class="theme-text-income font-semibold mb-2">¡Objetivo completado! 🎉</p>
-                    <button class="btn-spend-piggybank w-full py-2 px-4 rounded-xl theme-btn-expense font-semibold text-sm shadow-md transition-transform hover:scale-105" data-id="${id}">
-                   💸 Gastar hucha
-                </button>
-            </div>`;
-        } else if (isBudget) {
+        
+        if (isBudget) {
              footerActions = `
                 <div class="mt-4 flex gap-2">
                     <button class="btn-refill-piggybank flex-1 py-2 px-2 rounded-xl theme-btn-income font-semibold text-sm shadow-md transition-transform hover:scale-105" data-id="${id}">
@@ -1222,6 +1224,20 @@ let transactions = [];
                         </button>
                     </div>`;
              }
+        } else {
+            // SAVINGS Logic
+            footerActions = `
+                <div class="mt-4 flex gap-2">
+                    ${!isCompleted ? `
+                    <button class="btn-refill-piggybank flex-1 py-2 px-2 rounded-xl theme-btn-income font-semibold text-sm shadow-md transition-transform hover:scale-105" data-id="${id}">
+                       📥 Añadir saldo
+                    </button>` : `
+                    <button class="btn-spend-piggybank flex-1 py-2 px-2 rounded-xl theme-btn-expense font-semibold text-sm shadow-md transition-transform hover:scale-105" data-id="${id}">
+                       🎉 Gastar hucha
+                    </button>`}
+                </div>
+                ${isCompleted ? '<p class="text-center theme-text-income font-semibold mt-2 text-sm">¡Objetivo completado! 🎉</p>' : ''}
+            `;
         }
         
         card.innerHTML = `
@@ -1246,7 +1262,7 @@ let transactions = [];
             </div>
             ${(!isBudget) ? `
             <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
-              <div class="progress-bar h-full rounded-full transition-all" style="width: ${Math.min(percentage, 100)}%; background-color: ${barColor}"></div>
+              <div class="progress-bar h-full rounded-full transition-all" style="width: ${Math.max(0, Math.min(percentage, 100))}%; background-color: ${barColor}"></div>
             </div>` : ''}
           </div>
           
@@ -1299,13 +1315,11 @@ let transactions = [];
                  document.getElementById('edit-piggybank-goal').value = pb.goal;
                  
                  const goalContainer = document.getElementById('edit-piggybank-goal-container');
-                 if (pb.type === 'budget') {
-                     goalContainer.classList.add('hidden');
-                     document.getElementById('edit-piggybank-goal').required = false;
-                 } else {
-                     goalContainer.classList.remove('hidden');
-                     document.getElementById('edit-piggybank-goal').required = true;
-                 }
+                 const goalInput = document.getElementById('edit-piggybank-goal');
+                 
+                 // Hide goal field for all piggybanks (Goal is not editable once created)
+                 goalContainer.classList.add('hidden');
+                 goalInput.required = false;
 
                  document.getElementById('modal-piggybank-edit').style.display = 'flex';
              }
@@ -1377,8 +1391,10 @@ let transactions = [];
                const modalTitle = document.querySelector('#modal-refill h3');
                if (pb.type === 'budget') {
                    modalTitle.textContent = '📥 Rellenar Presupuesto';
+               } else if (pb.created_from_expense) {
+                   modalTitle.textContent = '📥 Añadir Saldo'; // Expense Tracker
                } else {
-                   modalTitle.textContent = '📥 Añadir Saldo';
+                   modalTitle.textContent = '📥 Añadir Ahorro'; // Savings
                }
 
                document.getElementById('modal-refill').style.display = 'flex';
