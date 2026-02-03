@@ -1,7 +1,7 @@
 import os
 import json
 import uuid
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 
 app = Flask(__name__)
 DATA_FILE = 'data.json'
@@ -22,6 +22,10 @@ def save_data(data):
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/assets/<path:filename>')
+def serve_assets(filename):
+    return send_from_directory('assets', filename)
 
 @app.route('/api/data', methods=['GET'])
 def get_data():

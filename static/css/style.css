@@ -2,12 +2,12 @@
       /* CoinFlow Light */
       --bg-primary: #F8F9FA;
       --bg-secondary: #FFFFFF;
-      --bg-header: #3498DB;
+      --bg-header: #E3F2FD;
       --border-color: #E0E0E0;
       
       --text-primary: #2C3E50;
       --text-secondary: #7F8C8D;
-      --text-header: #FFFFFF;
+      --text-header: #1A5276;
       
       --color-income: #2ECC71;
       --color-expense: #E74C3C;
@@ -27,7 +27,7 @@
       /* CoinFlow Dark */
       --bg-primary: #121A24;
       --bg-secondary: #1E2A38;
-      --bg-header: #1F3A5F;
+      --bg-header: #0D1B2A;
       --border-color: #2C3E50;
       
       --text-primary: #ECF0F1;
