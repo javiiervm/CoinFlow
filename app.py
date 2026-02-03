@@ -48,8 +48,8 @@ def add_transaction():
     if not all(k in new_transaction for k in required):
         return jsonify({'success': False, 'message': 'Missing fields'}), 400
 
-    # FORCE RULE: External transactions cannot have a piggybank
-    if new_transaction.get('external'):
+    # FORCE RULE: External EXPENSES cannot have a piggybank
+    if new_transaction.get('external') and new_transaction.get('type') == 'expense':
         new_transaction['piggybank_id'] = ''
         new_transaction['create_piggybank'] = False # Disable creation if external
 
@@ -112,8 +112,8 @@ def update_transaction():
     for i, t in enumerate(data['transactions']):
         if t['id'] == updated_transaction['id']:
             
-            # FORCE RULE: External transactions cannot have a piggybank
-            if updated_transaction.get('external'):
+            # FORCE RULE: External EXPENSES cannot have a piggybank
+            if updated_transaction.get('external') and updated_transaction.get('type') == 'expense':
                 # If it was previously linked to a piggybank, we might need to adjust that piggybank
                 prev_pb_id = t.get('piggybank_id')
                 if prev_pb_id:
@@ -251,6 +251,10 @@ def delete_piggybank():
     req = request.json
     p_id = req.get('id')
     
+    # Find the piggybank to check its type
+    pb_to_delete = next((p for p in data['piggybanks'] if p['id'] == p_id), None)
+    is_expense_tracker = pb_to_delete.get('created_from_expense') if pb_to_delete else False
+
     # Remove piggybank definition
     data['piggybanks'] = [p for p in data['piggybanks'] if p['id'] != p_id]
     
@@ -258,7 +262,10 @@ def delete_piggybank():
     for t in data['transactions']:
         if t.get('piggybank_id') == p_id:
             t['piggybank_id'] = ''
-            # t['piggybank_name'] = ''  <-- Removed this to preserve history
+            # If it was an expense tracker, we mark transactions as external 
+            # so they don't affect global balance retroactively upon unlinking
+            if is_expense_tracker:
+                t['external'] = True
             
     save_data(data)
     return jsonify({'success': True})

@@ -814,10 +814,17 @@ let transactions = [];
             });
         }
         
+        let concept = '';
+        if (pb.type === 'budget') {
+            concept = source === 'new' ? `Recarga externa de presupuesto` : `Recarga de presupuesto`;
+        } else {
+            concept = source === 'new' ? `Aportación externa a: ${pb.name}` : `Aportación a: ${pb.name}`;
+        }
+
         // 2. Income to Piggybank (Addition)
         const res2 = await apiCall('/api/transaction', 'POST', {
             type: 'income',
-            concept: source === 'new' ? `Recarga externa de presupuesto` : `Recarga de presupuesto`,
+            concept: concept,
             amount: amount,
             currency: pb.currency,
             external: source === 'new',
@@ -1086,7 +1093,7 @@ let transactions = [];
              pb.totalIncome = totalIncome;
              
              if (pb.created_from_expense) {
-                 pb.completed = false; 
+                 pb.completed = rawCurrent >= 0; 
              } else if (pb.type === 'budget') {
                  pb.completed = false; // Budgets are never "completed" in the savings sense
              } else {
@@ -1133,13 +1140,38 @@ let transactions = [];
         let badge = '<span class="text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 px-2 py-0.5 rounded-full ml-2">Ahorro</span>';
 
         if (isExpenseTracker) {
-            displayCurrent = piggybank.spent;
-            percentage = 100;
-            isCompleted = false;
-            subText = `Total Acumulado`;
-            mainValue = `${piggybank.goal.toFixed(2)}${piggybank.currency || '€'}`;
-            barColor = 'var(--color-expense)';
+            displayCurrent = piggybank.current; // Net Balance (Income - Expense)
+            isCompleted = piggybank.completed;
+
+            // Calculate progress towards zero (paying off the debt)
+            let debt = piggybank.goal;
+            let paid = piggybank.totalIncome;
+            
+            if (debt > 0) {
+                percentage = (paid / debt) * 100;
+            } else {
+                percentage = paid >= 0 ? 100 : 0;
+            }
+            
+            subText = `Total Gastado: ${piggybank.goal.toFixed(2)}${piggybank.currency || '€'}`;
+            mainValue = `${displayCurrent.toFixed(2)}${piggybank.currency || '€'}`;
+            barColor = 'var(--color-income)';
             badge = '<span class="text-xs bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 px-2 py-0.5 rounded-full ml-2">Gasto</span>';
+            
+            if (isCompleted) {
+                 percentage = 100;
+                 subText = '<span class="text-green-500 font-bold">¡Deuda Pagada!</span>';
+                 if (displayCurrent > 0) {
+                      subText += ` (Excedente: ${displayCurrent.toFixed(2)}${piggybank.currency})`;
+                 }
+            } else {
+                // Red text if negative (debt), Green if positive (surplus)
+                if (displayCurrent < 0) {
+                     mainValue = `<span class="text-red-500">${displayCurrent.toFixed(2)}${piggybank.currency || '€'}</span>`;
+                } else {
+                     mainValue = `<span class="text-green-500">+${displayCurrent.toFixed(2)}${piggybank.currency || '€'}</span>`;
+                }
+            }
         } else if (isBudget) {
             displayCurrent = piggybank.current;
             subText = `Disponible`;
@@ -1176,6 +1208,20 @@ let transactions = [];
                        💸 Gastar
                     </button>` : ''}
                 </div>`;
+        } else if (isExpenseTracker) {
+             if (isCompleted) {
+                 footerActions = `
+                    <div class="mt-4 text-center">
+                        <p class="theme-text-secondary text-sm">Esta hucha está saldada. Puedes eliminarla para archivarla.</p>
+                    </div>`;
+             } else {
+                 footerActions = `
+                    <div class="mt-4 flex gap-2">
+                        <button class="btn-refill-piggybank flex-1 py-2 px-2 rounded-xl theme-btn-income font-semibold text-sm shadow-md transition-transform hover:scale-105" data-id="${id}">
+                           📥 Añadir saldo
+                        </button>
+                    </div>`;
+             }
         }
         
         card.innerHTML = `
@@ -1196,7 +1242,7 @@ let transactions = [];
           <div class="mb-3">
             <div class="flex justify-between text-sm mb-1">
               <span class="font-semibold theme-text-primary text-xl">${mainValue}</span>
-              ${(!isExpenseTracker && !isBudget) ? `<span class="theme-text-secondary">${percentage.toFixed(0)}%</span>` : ''}
+              ${(!isBudget) ? `<span class="theme-text-secondary">${percentage.toFixed(0)}%</span>` : ''}
             </div>
             ${(!isBudget) ? `
             <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
@@ -1218,6 +1264,19 @@ let transactions = [];
             if(!confirm('¿Estás seguro? Se eliminará la hucha.')) return;
             
             btn.disabled = true;
+            
+            // Check for surplus in Expense Tracker to transfer to Global
+            if (piggybank.created_from_expense && piggybank.current > 0) {
+                 await apiCall('/api/transaction', 'POST', {
+                      type: 'income',
+                      concept: `Excedente de hucha de gasto: ${piggybank.name}`,
+                      amount: piggybank.current,
+                      currency: piggybank.currency,
+                      timestamp: new Date().toISOString(),
+                      piggybank_id: '' // Global
+                  });
+            }
+
             const result = await apiCall('/api/piggybank', 'DELETE', { id: id });
             if (!result || !result.success) {
               showToast('Error al eliminar la hucha', 'error');
@@ -1311,9 +1370,18 @@ let transactions = [];
       document.querySelectorAll('.btn-refill-piggybank').forEach(btn => {
           btn.addEventListener('click', (e) => {
                const id = e.target.dataset.id;
+               const pb = piggybanks.get(id);
+               
                document.getElementById('refill-piggybank-id').value = id;
+               
+               const modalTitle = document.querySelector('#modal-refill h3');
+               if (pb.type === 'budget') {
+                   modalTitle.textContent = '📥 Rellenar Presupuesto';
+               } else {
+                   modalTitle.textContent = '📥 Añadir Saldo';
+               }
+
                document.getElementById('modal-refill').style.display = 'flex';
-               // Reset or prefill logic if needed
           });
       });
     }
@@ -1438,6 +1506,8 @@ let transactions = [];
           let label = `${piggybank.name}`;
           if (piggybank.type === 'budget') {
               label += ` (Disponible: ${piggybank.current.toFixed(2)} ${piggybank.currency})`;
+          } else if (piggybank.created_from_expense) {
+              label += ` (Saldo: ${piggybank.current.toFixed(2)} ${piggybank.currency})`;
           } else {
               label += ` (${piggybank.current.toFixed(2)}/${piggybank.goal.toFixed(2)} ${piggybank.currency})`;
           }
