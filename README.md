@@ -19,12 +19,10 @@
 ## 🚀 Características Principales
 
 *   **Gestión de Transacciones:** Registra fácilmente tus ingresos y gastos.
-*   **Balance en Tiempo Real:** Visualiza tu saldo total en Euros (€) y Dólares ($).
 *   **Huchas de Ahorro:** Crea objetivos de ahorro personalizados (huchas) y asigna ingresos directamente a ellas o paga gastos desde ellas.
-*   **Soporte Multidivisa:** Maneja transacciones en diferentes monedas.
-*   **Interfaz Moderna:** Diseño limpio y responsivo utilizando Tailwind CSS.
-*   **Persistencia de Datos:** Tus datos se guardan localmente en un archivo JSON (`data.json`), asegurando que no pierdas tu información entre sesiones.
-*   **Cambio de Tema:** Interfaz adaptable con soporte para temas visuales.
+*   **Interfaz Moderna:** Diseño limpio y responsivo utilizando Tailwind CSS, con una interfaz adaptable con soporte para temas visuales.
+*   **Persistencia de Datos:** Tus datos se guardan localmente en un archivo JSON (`data.json`), asegurando que no pierdas tu información entre sesiones y permitiendo un acceso offline a la aplicación.
+*   **Soporte Multidivisa:** Visualiza tu saldo total en Euros (€) y Dólares ($).
 
 ## 📂 Estructura del Proyecto
 
