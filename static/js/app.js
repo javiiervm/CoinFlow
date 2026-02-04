@@ -39,9 +39,18 @@ let transactions = [];
     function setTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
         localStorage.setItem('theme', theme);
-        const icon = document.getElementById('icon-theme');
-        if (icon) {
-            icon.textContent = theme === 'dark' ? '🌙' : '🌞';
+        
+        const sunIcon = document.getElementById('icon-theme-sun');
+        const moonIcon = document.getElementById('icon-theme-moon');
+        
+        if (sunIcon && moonIcon) {
+            if (theme === 'dark') {
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+            } else {
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+            }
         }
     }
 
@@ -1078,8 +1087,7 @@ let transactions = [];
       incomes.forEach(income => {
         const currency = income.currency || '€';
         if (income.piggybank_id) {
-            // Transactions linked to piggybanks are ignored for global balance
-            // except for the overflow logic of SAVINGS piggybanks below.
+             // Linked to piggybank
         } else {
           if (currency === '€') {
             euroBalance.income += income.amount;
@@ -1089,7 +1097,6 @@ let transactions = [];
         }
       });
       
-      // Overflow logic ONLY for Savings Piggybanks
       piggybanks.forEach((pb, id) => {
           if (pb.type === 'savings' && !pb.created_from_expense && pb.overflow > 0) {
               if (pb.currency === '€') euroBalance.income += pb.overflow;
@@ -1111,19 +1118,21 @@ let transactions = [];
       const euroTotal = euroBalance.income - euroBalance.expense;
       const dollarTotal = dollarBalance.income - dollarBalance.expense;
       
-      const euroElement = document.getElementById('balance-euro');
-      const euroColor = euroTotal < 0 ? 'var(--color-expense)' : 'var(--color-income)';
-      euroElement.innerHTML = `
-        <p class="text-sm theme-text-secondary mb-1">Euros</p>
-        <p class="text-6xl font-bold transition-all duration-300" style="color: ${euroColor}">${euroTotal.toFixed(2)}<span class="text-4xl">€</span></p>
-      `;
+      const updateEl = (id, amount, symbol) => {
+          const el = document.getElementById(id);
+          if (el) {
+              if (amount < 0) {
+                  el.style.color = 'var(--color-expense)';
+              } else {
+                  el.style.color = 'var(--text-primary)';
+              }
+              
+              el.innerHTML = `${amount.toFixed(2)}<span class="text-4xl theme-text-secondary font-light ml-1">${symbol}</span>`;
+          }
+      };
       
-      const dollarElement = document.getElementById('balance-dollar');
-      const dollarColor = dollarTotal < 0 ? 'var(--color-expense)' : 'var(--color-income)';
-      dollarElement.innerHTML = `
-        <p class="text-sm theme-text-secondary mb-1">Dólares</p>
-        <p class="text-6xl font-bold transition-all duration-300" style="color: ${dollarColor}">${dollarTotal.toFixed(2)}<span class="text-4xl">$</span></p>
-      `;
+      updateEl('balance-euro', euroTotal, '€');
+      updateEl('balance-dollar', dollarTotal, '$');
     }
     
     function updatePiggybanks() {
@@ -1172,10 +1181,15 @@ let transactions = [];
       if (filteredPiggybanks.length === 0) {
         container.innerHTML = '';
         if (piggybanks.size > 0) {
-             noPiggybanks.innerHTML = '<p class="text-xl">No se encontraron huchas con estos filtros.</p>';
+             noPiggybanks.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-8">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <p class="text-xl theme-text-secondary">No se encontraron huchas.</p>
+                </div>`;
              noPiggybanks.style.display = 'block';
         } else {
-             noPiggybanks.innerHTML = '<p class="text-xl">No tienes huchas creadas. ¡Crea una para empezar a ahorrar!</p>';
              noPiggybanks.style.display = 'block';
         }
         return;
@@ -1192,127 +1206,145 @@ let transactions = [];
         let displayCurrent = Math.min(piggybank.current, piggybank.goal);
         let percentage = (displayCurrent / piggybank.goal) * 100;
         let isCompleted = piggybank.completed;
-        let subText = `Objetivo: ${piggybank.goal.toFixed(2)}${piggybank.currency || '€'}`;
+        
+        let subText = `<span class="text-xs uppercase tracking-wider text-gray-400 font-semibold">Objetivo</span> <span class="font-medium">${piggybank.goal.toFixed(2)}${piggybank.currency || '€'}</span>`;
         let mainValue = `${displayCurrent.toFixed(2)}${piggybank.currency || '€'}`;
-        let barColor = isCompleted ? 'var(--color-income)' : 'var(--bg-header)';
-        let badge = '<span class="text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 px-2 py-0.5 rounded-full ml-2">Ahorro</span>';
+        let barColor = isCompleted ? 'var(--color-income)' : 'var(--color-accent)'; 
+        
+        // Icons
+        let iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+        let typeBadge = '<span class="badge bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">Ahorro</span>';
 
         if (isExpenseTracker) {
-            displayCurrent = piggybank.current; // Net Balance (Income - Expense)
+            displayCurrent = piggybank.current; // Net Balance
             isCompleted = piggybank.completed;
+            
+            iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+            typeBadge = '<span class="badge badge-expense">Gasto</span>';
 
-            // Calculate progress towards zero (paying off the debt)
+            // Calculate progress
             let debt = piggybank.goal;
             let paid = piggybank.totalIncome;
-            
             if (debt > 0) {
                 percentage = (paid / debt) * 100;
             } else {
                 percentage = paid >= 0 ? 100 : 0;
             }
             
-            subText = `Total Gastado: ${piggybank.goal.toFixed(2)}${piggybank.currency || '€'}`;
-            mainValue = `${displayCurrent.toFixed(2)}${piggybank.currency || '€'}`;
+            subText = `<span class="text-xs uppercase tracking-wider text-gray-400 font-semibold">Total Gastado</span> <span class="font-medium">${piggybank.goal.toFixed(2)}${piggybank.currency || '€'}</span>`;
             barColor = 'var(--color-income)';
-            badge = '<span class="text-xs bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 px-2 py-0.5 rounded-full ml-2">Gasto</span>';
             
             if (isCompleted) {
                  percentage = 100;
-                 subText = '<span class="text-green-500 font-bold">¡Deuda Pagada!</span>';
-                 if (displayCurrent > 0) {
-                      subText += ` (Excedente: ${displayCurrent.toFixed(2)}${piggybank.currency})`;
-                 }
+                 subText = '<span class="text-xs font-bold text-green-500 uppercase tracking-wider">¡Deuda Pagada!</span>';
             } else {
-                // Red text if negative (debt), Green if positive (surplus)
                 if (displayCurrent < 0) {
-                     mainValue = `<span class="text-red-500">${displayCurrent.toFixed(2)}${piggybank.currency || '€'}</span>`;
+                     mainValue = `<span class="text-red-500 font-bold">${displayCurrent.toFixed(2)}${piggybank.currency || '€'}</span>`;
                 } else {
-                     mainValue = `<span class="text-green-500">+${displayCurrent.toFixed(2)}${piggybank.currency || '€'}</span>`;
+                     mainValue = `<span class="text-green-500 font-bold">+${displayCurrent.toFixed(2)}${piggybank.currency || '€'}</span>`;
                 }
             }
         } else if (isBudget) {
             displayCurrent = piggybank.current;
-            subText = `Disponible`;
-            mainValue = `${displayCurrent.toFixed(2)}${piggybank.currency || '€'}`;
-            badge = '<span class="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-2 py-0.5 rounded-full ml-2">Presupuesto</span>';
+            iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>`;
+            typeBadge = '<span class="badge bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">Presupuesto</span>';
+            subText = `<span class="text-xs uppercase tracking-wider text-gray-400 font-semibold">Disponible</span>`;
             
             if (displayCurrent < 0) {
-                mainValue = `<span class="text-red-500">${displayCurrent.toFixed(2)}${piggybank.currency || '€'}</span>`;
-                subText = `<span class="text-red-500 font-bold">¡En números rojos!</span>`;
+                mainValue = `<span class="text-red-500 font-bold">${displayCurrent.toFixed(2)}${piggybank.currency || '€'}</span>`;
+                subText = `<span class="text-red-500 font-bold text-xs uppercase">¡En números rojos!</span>`;
             }
         }
         
         const card = document.createElement('div');
-        card.className = 'piggybank-card theme-bg-secondary rounded-2xl shadow-lg p-6 relative overflow-hidden theme-border border transition-colors duration-300';
+        card.className = 'glass rounded-3xl p-6 relative overflow-hidden shadow-sm hover-card-effect group';
         
         let footerActions = '';
         
-        
+        const btnClassBase = "flex-1 py-2 px-3 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-1";
+        const btnClassIncome = `${btnClassBase} bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/40`;
+        const btnClassExpense = `${btnClassBase} bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40`;
+        const btnClassNeutral = `${btnClassBase} bg-gray-50 text-gray-700 hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600`;
+
         if (isBudget) {
              footerActions = `
-                <div class="mt-4 flex gap-2">
-                    <button class="btn-refill-piggybank flex-1 py-2 px-2 rounded-xl theme-btn-income font-semibold text-sm shadow-md transition-transform hover:scale-105" data-id="${id}">
-                       📥 Rellenar
+                <div class="mt-5 pt-4 border-t border-gray-100 dark:border-gray-700 flex gap-2">
+                    <button class="btn-refill-piggybank ${btnClassIncome}" data-id="${id}">
+                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                       Rellenar
                     </button>
                     ${piggybank.current > 0 ? `
-                    <button class="btn-withdraw-piggybank flex-1 py-2 px-2 rounded-xl theme-btn-expense font-semibold text-sm shadow-md transition-transform hover:scale-105" data-id="${id}">
-                       💸 Gastar
+                    <button class="btn-withdraw-piggybank ${btnClassExpense}" data-id="${id}">
+                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" /></svg>
+                       Gastar
                     </button>` : ''}
                 </div>`;
         } else if (isExpenseTracker) {
              if (isCompleted) {
                  footerActions = `
-                    <div class="mt-4 text-center">
-                        <p class="theme-text-secondary text-sm">Esta hucha está saldada. Puedes eliminarla para archivarla.</p>
+                    <div class="mt-5 pt-4 border-t border-gray-100 dark:border-gray-700 text-center">
+                        <p class="theme-text-secondary text-xs">Hucha saldada. Puedes eliminarla para archivarla.</p>
                     </div>`;
              } else {
                  footerActions = `
-                    <div class="mt-4 flex gap-2">
-                        <button class="btn-refill-piggybank flex-1 py-2 px-2 rounded-xl theme-btn-income font-semibold text-sm shadow-md transition-transform hover:scale-105" data-id="${id}">
-                           📥 Añadir saldo
+                    <div class="mt-5 pt-4 border-t border-gray-100 dark:border-gray-700 flex gap-2">
+                        <button class="btn-refill-piggybank ${btnClassIncome}" data-id="${id}">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                           Añadir saldo
                         </button>
                     </div>`;
              }
         } else {
             // SAVINGS Logic
             footerActions = `
-                <div class="mt-4 flex gap-2">
+                <div class="mt-5 pt-4 border-t border-gray-100 dark:border-gray-700 flex gap-2">
                     ${!isCompleted ? `
-                    <button class="btn-refill-piggybank flex-1 py-2 px-2 rounded-xl theme-btn-income font-semibold text-sm shadow-md transition-transform hover:scale-105" data-id="${id}">
-                       📥 Añadir saldo
+                    <button class="btn-refill-piggybank ${btnClassIncome}" data-id="${id}">
+                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                       Añadir saldo
                     </button>` : `
-                    <button class="btn-spend-piggybank flex-1 py-2 px-2 rounded-xl theme-btn-expense font-semibold text-sm shadow-md transition-transform hover:scale-105" data-id="${id}">
-                       🎉 Gastar hucha
+                    <button class="btn-spend-piggybank ${btnClassNeutral}" data-id="${id}">
+                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+                       Gastar hucha
                     </button>`}
                 </div>
-                ${isCompleted ? '<p class="text-center theme-text-income font-semibold mt-2 text-sm">¡Objetivo completado! 🎉</p>' : ''}
+                ${isCompleted ? '<div class="mt-2 text-center text-xs text-green-600 font-bold uppercase tracking-wider">¡Objetivo completado!</div>' : ''}
             `;
         }
         
         card.innerHTML = `
           <div class="flex justify-between items-start mb-4">
-            <div class="flex-1 mr-2">
-              <h3 class="text-xl font-bold theme-text-primary truncate" title="${piggybank.name}">
-                ${piggybank.name} 
-                ${badge}
-              </h3>
-              <p class="text-sm theme-text-secondary">${subText}</p>
+            <div class="flex items-center gap-3 overflow-hidden">
+              <div class="p-2.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+                ${iconSvg}
+              </div>
+              <div class="overflow-hidden">
+                  <h3 class="font-bold theme-text-primary text-lg truncate leading-tight mb-0.5" title="${piggybank.name}">
+                    ${piggybank.name}
+                  </h3>
+                  ${typeBadge}
+              </div>
             </div>
-            <div class="flex gap-2 shrink-0">
-                 <button class="edit-piggybank theme-text-secondary hover:text-blue-500 transition-colors" data-id="${id}" title="Editar">✏️</button>
-                 <button class="delete-piggybank theme-text-expense hover:opacity-75 font-bold text-xl leading-none" data-id="${id}" title="Eliminar">×</button>
+            <div class="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                 <button class="edit-piggybank p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-blue-500 transition-colors" data-id="${id}" title="Editar">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                 </button>
+                 <button class="delete-piggybank p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 transition-colors" data-id="${id}" title="Eliminar">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                 </button>
             </div>
           </div>
           
-          <div class="mb-3">
-            <div class="flex justify-between text-sm mb-1">
-              <span class="font-semibold theme-text-primary text-xl">${mainValue}</span>
-              ${(!isBudget) ? `<span class="theme-text-secondary">${percentage.toFixed(0)}%</span>` : ''}
+          <div class="mb-2">
+            <div class="flex justify-between items-end mb-2">
+              <span class="text-2xl font-bold theme-text-primary tracking-tight">${mainValue}</span>
+              <div class="text-right text-sm">${subText}</div>
             </div>
             ${(!isBudget) ? `
-            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
-              <div class="progress-bar h-full rounded-full transition-all" style="width: ${Math.max(0, Math.min(percentage, 100))}%; background-color: ${barColor}"></div>
-            </div>` : ''}
+            <div class="w-full bg-gray-100 dark:bg-gray-700/50 rounded-full h-2 overflow-hidden">
+              <div class="progress-bar h-full rounded-full transition-all duration-700" style="width: ${Math.max(0, Math.min(percentage, 100))}%; background-color: ${barColor}"></div>
+            </div>
+            <div class="text-right mt-1 text-xs text-gray-400 font-medium">${percentage.toFixed(0)}%</div>` : ''}
           </div>
           
           ${footerActions}
@@ -1494,30 +1526,38 @@ let transactions = [];
       
       if (filteredIncomes.length === 0) {
         incomeList.innerHTML = '';
-        if (allIncomes.length > 0) {
-            noIncome.innerHTML = '<p>No hay ingresos que coincidan.</p>';
-        } else {
-            noIncome.innerHTML = '<p>No hay ingresos registrados</p>';
-        }
-        noIncome.style.display = 'block';
+        noIncome.style.display = 'flex'; // Flex for center alignment
       } else {
         noIncome.style.display = 'none';
         incomeList.innerHTML = filteredIncomes.map(income => `
-          <div class="transaction-item theme-bg-secondary border-l-4 rounded-xl p-4 flex justify-between items-center mb-3 theme-border border shadow-sm" style="border-left-color: ${income.external ? 'gray' : 'var(--color-income)'};">
-            <div>
-              <p class="font-semibold theme-text-primary">
-                ${income.concept}
-                ${income.edited ? '<span class="text-xs theme-btn-primary text-white px-2 py-0.5 rounded-full ml-2">Editado</span>' : ''}
-                ${income.external ? '<span class="text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full ml-2">Externo</span>' : ''}
-              </p>
-              ${income.piggybank_name ? `<p class="text-xs theme-text-secondary">→ ${income.piggybank_name}</p>` : ''}
-              <p class="text-xs theme-text-secondary">${new Date(income.timestamp).toLocaleDateString()}</p>
+          <div class="transaction-item glass p-4 rounded-2xl flex justify-between items-center mb-3 group hover:border-green-200 dark:hover:border-green-900 transition-colors">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 rounded-xl ${income.external ? 'bg-gray-100 text-gray-400 dark:bg-gray-800' : 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400'}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                </div>
+                <div>
+                  <p class="font-bold theme-text-primary text-sm">
+                    ${income.concept}
+                  </p>
+                  <div class="flex items-center gap-2 mt-0.5">
+                      <span class="text-xs theme-text-secondary">${new Date(income.timestamp).toLocaleDateString()}</span>
+                      ${income.piggybank_name ? `<span class="text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 theme-text-secondary flex items-center gap-1">🐷 ${income.piggybank_name}</span>` : ''}
+                      ${income.edited ? '<span class="text-xs px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">Editado</span>' : ''}
+                      ${income.external ? '<span class="text-xs px-1.5 py-0.5 rounded bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400">Externo</span>' : ''}
+                  </div>
+                </div>
             </div>
             <div class="text-right">
               <p class="font-bold text-lg" style="color: ${income.external ? 'var(--text-secondary)' : 'var(--color-income)'}">+${income.amount.toFixed(2)}${income.currency || '€'}</p>
-              <div class="flex gap-2 justify-end mt-1">
-                <button class="edit-transaction theme-text-secondary hover:text-blue-500 text-sm" data-id="${income.id}">Editar</button>
-                <button class="delete-transaction theme-text-secondary hover:text-red-500 text-sm" data-id="${income.id}">Eliminar</button>
+              <div class="flex gap-1 justify-end mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button class="edit-transaction p-1.5 text-gray-400 hover:text-blue-500 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-id="${income.id}" title="Editar">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                </button>
+                <button class="delete-transaction p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" data-id="${income.id}" title="Eliminar">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </button>
               </div>
             </div>
           </div>
@@ -1526,30 +1566,38 @@ let transactions = [];
       
       if (filteredExpenses.length === 0) {
         expenseList.innerHTML = '';
-        if (allExpenses.length > 0) {
-            noExpenses.innerHTML = '<p>No hay gastos que coincidan.</p>';
-        } else {
-            noExpenses.innerHTML = '<p>No hay gastos registrados</p>';
-        }
-        noExpenses.style.display = 'block';
+        noExpenses.style.display = 'flex';
       } else {
         noExpenses.style.display = 'none';
         expenseList.innerHTML = filteredExpenses.map(expense => `
-          <div class="transaction-item theme-bg-secondary border-l-4 rounded-xl p-4 flex justify-between items-center mb-3 theme-border border shadow-sm" style="border-left-color: ${expense.external ? 'gray' : 'var(--color-expense)'};">
-            <div>
-              <p class="font-semibold theme-text-primary">
-                ${expense.concept}
-                ${expense.edited ? '<span class="text-xs theme-btn-primary text-white px-2 py-0.5 rounded-full ml-2">Editado</span>' : ''}
-                ${expense.external ? '<span class="text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full ml-2">Externo</span>' : ''}
-              </p>
-              ${expense.piggybank_name ? `<p class="text-xs theme-text-secondary">← ${expense.piggybank_name}</p>` : ''}
-              <p class="text-xs theme-text-secondary">${new Date(expense.timestamp).toLocaleDateString()}</p>
+          <div class="transaction-item glass p-4 rounded-2xl flex justify-between items-center mb-3 group hover:border-red-200 dark:hover:border-red-900 transition-colors">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 rounded-xl ${expense.external ? 'bg-gray-100 text-gray-400 dark:bg-gray-800' : 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400'}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
+                    </svg>
+                </div>
+                <div>
+                  <p class="font-bold theme-text-primary text-sm">
+                    ${expense.concept}
+                  </p>
+                  <div class="flex items-center gap-2 mt-0.5">
+                      <span class="text-xs theme-text-secondary">${new Date(expense.timestamp).toLocaleDateString()}</span>
+                      ${expense.piggybank_name ? `<span class="text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 theme-text-secondary flex items-center gap-1">🐷 ${expense.piggybank_name}</span>` : ''}
+                      ${expense.edited ? '<span class="text-xs px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">Editado</span>' : ''}
+                      ${expense.external ? '<span class="text-xs px-1.5 py-0.5 rounded bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400">Externo</span>' : ''}
+                  </div>
+                </div>
             </div>
             <div class="text-right">
               <p class="font-bold text-lg" style="color: ${expense.external ? 'var(--text-secondary)' : 'var(--color-expense)'}">-${expense.amount.toFixed(2)}${expense.currency || '€'}</p>
-              <div class="flex gap-2 justify-end mt-1">
-                <button class="edit-transaction theme-text-secondary hover:text-blue-500 text-sm" data-id="${expense.id}">Editar</button>
-                <button class="delete-transaction theme-text-secondary hover:text-red-500 text-sm" data-id="${expense.id}">Eliminar</button>
+              <div class="flex gap-1 justify-end mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button class="edit-transaction p-1.5 text-gray-400 hover:text-blue-500 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-id="${expense.id}" title="Editar">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                </button>
+                <button class="delete-transaction p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" data-id="${expense.id}" title="Eliminar">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </button>
               </div>
             </div>
           </div>
@@ -1561,16 +1609,19 @@ let transactions = [];
           const id = e.target.dataset.id;
           const transaction = transactions.find(t => t.id === id);
           if (transaction) {
+            if(!confirm('¿Eliminar esta transacción?')) return;
+            
             btn.disabled = true;
-            btn.textContent = 'Eliminando...';
+            btn.textContent = '...'; // Small placeholder
+            
             const result = await apiCall('/api/transaction', 'DELETE', { id: transaction.id });
-            if (!result || !result.success) {
-              showToast('Error al eliminar la transacción', 'error');
-              btn.disabled = false;
-              btn.textContent = 'Eliminar';
-            } else {
+            if (result && result.success) {
                 showToast('Transacción eliminada', 'success');
                 loadData();
+            } else {
+                showToast('Error al eliminar', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>';
             }
           }
         });
@@ -1624,18 +1675,24 @@ let transactions = [];
     
     function showToast(message, type) {
       const toast = document.createElement('div');
-      // Toast colors are functional, keep green/red or use variables?
-      // "Estados financieros: Verde/Rojo". Notifications fit this.
-      const bgClass = type === 'success' ? 'theme-btn-income' : 'theme-btn-expense';
-      toast.className = `fixed bottom-8 right-8 px-6 py-4 rounded-xl shadow-2xl text-white font-semibold animate-slide-in z-50 ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
-      toast.style.backgroundColor = type === 'success' ? 'var(--color-income)' : 'var(--color-expense)';
-      toast.textContent = message;
+      const isSuccess = type === 'success';
+      const bgColor = isSuccess ? 'bg-green-600' : 'bg-red-600';
+      const icon = isSuccess ? '✅' : '⚠️';
+      
+      toast.className = `fixed bottom-6 right-6 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-slide-in z-50 text-white ${bgColor}`;
+      
+      toast.innerHTML = `
+        <span class="text-xl">${icon}</span>
+        <span class="font-medium">${message}</span>
+      `;
+      
       document.body.appendChild(toast);
       
       setTimeout(() => {
+        toast.style.transition = 'all 0.5s ease';
         toast.style.opacity = '0';
         toast.style.transform = 'translateY(20px)';
-        setTimeout(() => toast.remove(), 300);
+        setTimeout(() => toast.remove(), 500);
       }, 3000);
     }
     

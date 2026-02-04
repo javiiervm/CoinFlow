@@ -1,198 +1,207 @@
 :root {
-      /* CoinFlow Light */
-      --bg-primary: #F8F9FA;
-      --bg-secondary: #FFFFFF;
-      --bg-header: #E3F2FD;
-      --border-color: #E0E0E0;
-      
-      --text-primary: #2C3E50;
-      --text-secondary: #7F8C8D;
-      --text-header: #1A5276;
-      
-      --color-income: #2ECC71;
-      --color-expense: #E74C3C;
-      --color-accent: #F1C40F;
-      
-      --btn-primary-bg: #3498DB;
-      --btn-primary-text: #FFFFFF;
-      --btn-income-bg: #2ECC71;
-      --btn-income-text: #FFFFFF;
-      --btn-expense-bg: #E74C3C;
-      --btn-expense-text: #FFFFFF;
-      --btn-secondary-bg: #ECF0F1;
-      --btn-secondary-text: #2C3E50;
-    }
+  /* CoinFlow Light - Professional Refined */
+  --bg-primary: #f3f4f6; /* Cool Gray 100 */
+  --bg-secondary: rgba(255, 255, 255, 0.85); /* Glassy White */
+  --bg-header: rgba(255, 255, 255, 0.9);
+  --border-color: rgba(229, 231, 235, 0.6); /* Gray 200 */
+  
+  --text-primary: #111827; /* Gray 900 */
+  --text-secondary: #6b7280; /* Gray 500 */
+  --text-header: #1f2937; /* Gray 800 */
+  
+  --color-income: #059669; /* Emerald 600 */
+  --color-income-bg: #d1fae5; /* Emerald 100 */
+  --color-expense: #dc2626; /* Red 600 */
+  --color-expense-bg: #fee2e2; /* Red 100 */
+  --color-accent: #d97706; /* Amber 600 */
+  
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  --gradient-income: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --gradient-expense: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  --gradient-gold: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-color: rgba(0, 0, 0, 0.1);
+}
 
-    [data-theme="dark"] {
-      /* CoinFlow Dark */
-      --bg-primary: #121A24;
-      --bg-secondary: #1E2A38;
-      --bg-header: #0D1B2A;
-      --border-color: #2C3E50;
-      
-      --text-primary: #ECF0F1;
-      --text-secondary: #95A5A6;
-      --text-header: #FFFFFF; /* Kept white for contrast on deep blue */
-      
-      --color-income: #27AE60;
-      --color-expense: #C0392B;
-      --color-accent: #F4D03F;
-      
-      --btn-primary-bg: #3498DB;
-      --btn-primary-text: #ECF0F1;
-      --btn-income-bg: #27AE60;
-      --btn-income-text: #ECF0F1;
-      --btn-expense-bg: #C0392B;
-      --btn-expense-text: #ECF0F1;
-      --btn-secondary-bg: #2C3E50;
-      --btn-secondary-text: #ECF0F1;
-    }
+[data-theme="dark"] {
+  /* CoinFlow Dark - Deep Space */
+  --bg-primary: #0f172a; /* Slate 900 */
+  --bg-secondary: rgba(30, 41, 59, 0.75); /* Slate 800 Glass */
+  --bg-header: rgba(15, 23, 42, 0.85);
+  --border-color: rgba(51, 65, 85, 0.6); /* Slate 700 */
+  
+  --text-primary: #f8fafc; /* Slate 50 */
+  --text-secondary: #94a3b8; /* Slate 400 */
+  --text-header: #f1f5f9;
+  
+  --color-income: #34d399; /* Emerald 400 */
+  --color-income-bg: rgba(16, 185, 129, 0.1);
+  --color-expense: #f87171; /* Red 400 */
+  --color-expense-bg: rgba(239, 68, 68, 0.1);
+  --color-accent: #fbbf24; /* Amber 400 */
+  
+  --gradient-primary: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  --gradient-income: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  --gradient-expense: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+  --gradient-gold: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
 
-    body {
-      box-sizing: border-box;
-      background-color: var(--bg-primary);
-      color: var(--text-primary);
-      transition: background-color 0.3s, color 0.3s;
-    }
-    
-    * {
-      font-family: 'Outfit', system-ui, -apple-system, sans-serif;
-    }
+  --shadow-color: rgba(0, 0, 0, 0.5);
+}
 
-    /* Theme Utility Classes */
-    .theme-bg-primary { background-color: var(--bg-primary); }
-    .theme-bg-secondary { background-color: var(--bg-secondary); }
-    .theme-bg-header { background-color: var(--bg-header); }
-    .theme-border { border-color: var(--border-color); }
-    
-    .theme-text-primary { color: var(--text-primary); }
-    .theme-text-secondary { color: var(--text-secondary); }
-    .theme-text-header { color: var(--text-header); }
-    
-    .theme-text-income { color: var(--color-income); }
-    .theme-text-expense { color: var(--color-expense); }
-    .theme-text-accent { color: var(--color-accent); }
+body {
+  box-sizing: border-box;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.4s ease, color 0.4s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
-    .theme-btn-primary {
-      background-color: var(--btn-primary-bg);
-      color: var(--btn-primary-text);
-    }
-    .theme-btn-primary:hover {
-        filter: brightness(1.1);
-    }
-    
-    .theme-btn-income {
-      background-color: var(--btn-income-bg);
-      color: var(--btn-income-text);
-    }
-    .theme-btn-income:hover { filter: brightness(1.05); }
+* {
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+}
 
-    .theme-btn-expense {
-      background-color: var(--btn-expense-bg);
-      color: var(--btn-expense-text);
-    }
-    .theme-btn-expense:hover { filter: brightness(1.05); }
+/* Glassmorphism Utilities */
+.glass {
+  background-color: var(--bg-secondary);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+}
 
-    .theme-btn-secondary {
-      background-color: var(--btn-secondary-bg);
-      color: var(--btn-secondary-text);
-    }
-    
-    .theme-btn-gold {
-      background-color: var(--color-accent);
-      color: #FFFFFF; /* Gold usually needs white or dark text. Prompt says Gold is #F1C40F. White might be low contrast on light yellow. Let's check contrast. #F1C40F is bright. Dark text might be better, but "Añadir hucha" usually implies primary action. Let's try white but maybe adjust if needed. Prompt says "Botones... Secundario...". Wait, the prompt table didn't specify a "Gold Button". It said "Acentos dinero: Oro". I'll make a custom class. */
-      color: #2C3E50; /* Dark text on yellow is safer for contrast */
-    }
-    .theme-btn-gold:hover { filter: brightness(1.05); }
+.glass-header {
+  background-color: var(--bg-header);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-color);
+}
 
-    /* Override input styles for dark mode */
-    input, select {
-        background-color: var(--bg-secondary);
-        color: var(--text-primary);
-        border-color: var(--border-color);
-    }
-    input::placeholder {
-        color: var(--text-secondary);
-        opacity: 0.7;
-    }
+/* Theme Classes */
+.theme-bg-primary { background-color: var(--bg-primary); }
+.theme-bg-secondary { background-color: var(--bg-secondary); }
+.theme-text-primary { color: var(--text-primary); }
+.theme-text-secondary { color: var(--text-secondary); }
+.theme-text-income { color: var(--color-income); }
+.theme-text-expense { color: var(--color-expense); }
 
-    
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-      }
-      to {
-        opacity: 1;
-      }
-    }
-    
-    @keyframes pulse {
-      0%, 100% {
-        transform: scale(1);
-      }
-      50% {
-        transform: scale(1.05);
-      }
-    }
-    
-    .animate-slide-in {
-      animation: slideIn 0.4s ease-out;
-    }
-    
-    .animate-fade-in {
-      animation: fadeIn 0.3s ease-out;
-    }
-    
-    .animate-pulse-custom {
-      animation: pulse 0.3s ease-out;
-    }
-    
-    .transaction-item {
-      transition: all 0.3s ease;
-      background-color: var(--bg-secondary); /* Default base */
-      border: 1px solid var(--border-color);
-    }
-    
-    .transaction-item:hover {
-      transform: translateX(8px);
-    }
-    
-    .piggybank-card {
-      transition: all 0.3s ease;
-      background-color: var(--bg-secondary);
-      border: 1px solid var(--border-color);
-    }
-    
-    .piggybank-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
-    }
-    
-    .progress-bar {
-      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    .btn-primary {
-      transition: all 0.2s ease;
-    }
-    
-    .btn-primary:active {
-      transform: scale(0.95);
-    }
-    
-    .modal-backdrop {
-      backdrop-filter: blur(4px);
-    }
+/* Buttons */
+.btn {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  border: none;
+  cursor: pointer;
+}
 
-    @view-transition { navigation: auto; }
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background: var(--gradient-primary);
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4);
+}
+.btn-primary:hover {
+  box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn-income {
+  background: var(--gradient-income);
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4);
+}
+.btn-income:hover {
+  box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn-expense {
+  background: var(--gradient-expense);
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.4);
+}
+.btn-expense:hover {
+  box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn-gold {
+  background: var(--gradient-gold);
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.4);
+}
+.btn-gold:hover {
+  box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+.btn-secondary:hover {
+    background-color: var(--bg-primary);
+    border-color: var(--text-secondary);
+}
+
+/* Inputs */
+input, select {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+    transition: all 0.2s ease;
+}
+
+input:focus, select:focus {
+    border-color: var(--color-income); /* Default focus color, overridden by classes if needed */
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* Animations */
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-slide-in { animation: slideInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+.animate-fade-in { animation: fadeIn 0.5s ease-out; }
+
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+/* Badges */
+.badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.badge-income { background-color: var(--color-income-bg); color: var(--color-income); }
+.badge-expense { background-color: var(--color-expense-bg); color: var(--color-expense); }
+
+/* Card Hover Effect */
+.hover-card-effect {
+    transition: all 0.3s ease;
+}
+.hover-card-effect:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px var(--shadow-color), 0 10px 10px -5px var(--shadow-color);
+}

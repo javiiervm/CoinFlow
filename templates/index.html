@@ -12,23 +12,33 @@
   <link rel="stylesheet" href="/static/css/style.css">
   <script src="/static/js/app.js" defer></script>
  </head>
- <body class="h-full overflow-auto theme-bg-primary transition-colors duration-300">
-  <div id="app" class="w-full min-h-full flex flex-col">
+ <body class="h-full overflow-y-auto theme-bg-primary">
+  <div id="app" class="w-full min-h-full flex flex-col relative">
    
    <!-- Header -->
-   <header class="theme-bg-header shadow-lg transition-colors duration-300">
-       <div class="max-w-7xl mx-auto px-4 py-6 relative flex justify-center items-center">
-            <div class="text-center animate-fade-in">
-                <img src="/assets/Banner.png" alt="CoinFlow Banner" class="h-16 md:h-20 mx-auto object-contain">
+   <header class="glass-header sticky top-0 z-40 transition-all duration-300">
+       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <!-- Logo -->
+            <div class="flex items-center gap-3 animate-fade-in">
+                <img src="/static/Logo.png" alt="CoinFlow Logo" class="h-10 w-10 object-contain rounded-xl shadow-sm">
+                <span class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-400 dark:from-blue-400 dark:to-blue-200">
+                    CoinFlow
+                </span>
             </div>
             
-            <div class="absolute top-0 right-0 h-full flex items-center pr-4 gap-3">
+            <!-- Right Actions -->
+            <div class="flex items-center gap-3">
                  <!-- Theme Toggle -->
-                 <button id="btn-theme-toggle" class="p-2 bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 transition-all theme-text-header backdrop-blur-sm" title="Cambiar tema">
-                    <span id="icon-theme" class="text-xl">🌞</span>
+                 <button id="btn-theme-toggle" class="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors theme-text-secondary" title="Cambiar tema">
+                    <svg id="icon-theme-sun" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <svg id="icon-theme-moon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
                  </button>
                  <!-- Delete All -->
-                 <button id="btn-delete-all" class="p-2 bg-black/5 dark:bg-white/10 rounded-full hover:bg-red-500 hover:text-white transition-all theme-text-header backdrop-blur-sm" title="Borrar todos los datos">
+                 <button id="btn-delete-all" class="p-2.5 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 transition-colors" title="Borrar todos los datos">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
@@ -37,364 +47,488 @@
        </div>
    </header>
 
-   <div class="max-w-7xl mx-auto px-4 py-8 w-full flex-grow">
+   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-grow space-y-8">
     
-    <!-- Balance Card -->
-    <div class="theme-bg-secondary rounded-3xl shadow-xl p-8 mb-8 animate-slide-in theme-border border transition-colors duration-300">
-     <p class="theme-text-secondary text-lg mb-4 font-medium text-center">Saldo Total</p>
-     <div class="flex items-center justify-center gap-16">
-      <!-- Euro Balance -->
-      <div id="balance-euro" class="text-center">
-       <p class="text-sm theme-text-secondary mb-1">Euros</p>
-       <p class="text-6xl font-bold transition-all duration-300">0<span class="text-4xl">€</span></p>
-      </div>
-      <!-- Dollar Balance -->
-      <div id="balance-dollar" class="text-center">
-       <p class="text-sm theme-text-secondary mb-1">Dólares</p>
-       <p class="text-6xl font-bold transition-all duration-300">0<span class="text-4xl">$</span></p>
-      </div>
-     </div>
+    <!-- Balance Hero -->
+    <div class="glass rounded-3xl p-1 relative overflow-hidden animate-slide-in shadow-lg">
+        <div class="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 dark:from-blue-500/20 dark:to-purple-500/20 blur-xl"></div>
+        <div class="relative bg-white/50 dark:bg-black/20 backdrop-blur-sm rounded-[22px] p-8 text-center border border-white/20">
+            <h2 class="text-sm uppercase tracking-widest font-bold theme-text-secondary mb-6">Balance Total</h2>
+            <div class="flex flex-col md:flex-row items-center justify-center gap-12 md:gap-24">
+                <!-- Euro -->
+                <div class="group cursor-default">
+                    <div class="text-xs theme-text-secondary mb-2 font-medium bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full inline-block">Euros</div>
+                    <div id="balance-euro" class="text-6xl md:text-7xl font-bold theme-text-primary transition-all duration-300">
+                        0<span class="text-4xl theme-text-secondary font-light ml-1">€</span>
+                    </div>
+                </div>
+                 <!-- Divider -->
+                 <div class="hidden md:block w-px h-24 bg-gradient-to-b from-transparent via-gray-300 dark:via-gray-600 to-transparent"></div>
+                <!-- Dollar -->
+                <div class="group cursor-default">
+                    <div class="text-xs theme-text-secondary mb-2 font-medium bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full inline-block">Dólares</div>
+                    <div id="balance-dollar" class="text-6xl md:text-7xl font-bold theme-text-primary transition-all duration-300">
+                        0<span class="text-4xl theme-text-secondary font-light ml-1">$</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     
-    <!-- Action Buttons -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <button id="btn-add-income" class="theme-btn-income font-semibold py-4 px-6 rounded-2xl shadow-lg text-xl flex items-center justify-center transition-transform hover:scale-105"> 
-            <span class="text-3xl mr-2"></span> Añadir Ingreso 
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <button id="btn-add-income" class="btn btn-income h-24 rounded-2xl flex flex-col items-center justify-center gap-2 group"> 
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            <span class="font-semibold text-lg">Ingreso</span> 
         </button> 
-        <button id="btn-add-expense" class="theme-btn-expense font-semibold py-4 px-6 rounded-2xl shadow-lg text-xl flex items-center justify-center transition-transform hover:scale-105"> 
-            <span class="text-3xl mr-2"></span> Añadir Gasto 
+        <button id="btn-add-expense" class="btn btn-expense h-24 rounded-2xl flex flex-col items-center justify-center gap-2 group"> 
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+            </svg>
+            <span class="font-semibold text-lg">Gasto</span> 
         </button> 
-        <button id="btn-create-piggybank" class="theme-btn-gold font-semibold py-4 px-6 rounded-2xl shadow-lg text-xl flex items-center justify-center transition-transform hover:scale-105"> 
-            <span class="text-3xl mr-2"></span> Crear Hucha 
+        <button id="btn-create-piggybank" class="btn btn-gold h-24 rounded-2xl flex flex-col items-center justify-center gap-2 group"> 
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            <span class="font-semibold text-lg">Hucha</span> 
         </button>
-        <button id="btn-exchange" class="theme-btn-primary font-semibold py-4 px-6 rounded-2xl shadow-lg text-xl flex items-center justify-center transition-transform hover:scale-105"> 
-            <span class="text-3xl mr-2"></span> Cambio Divisa 
+        <button id="btn-exchange" class="btn btn-primary h-24 rounded-2xl flex flex-col items-center justify-center gap-2 group"> 
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+            <span class="font-semibold text-lg">Cambio</span> 
         </button>
     </div>
 
-    <!-- Filters Section -->
-    <div class="theme-bg-secondary rounded-3xl shadow-xl p-6 mb-8 theme-border border transition-colors duration-300">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+    <!-- Filters -->
+    <div class="glass rounded-2xl p-5 shadow-sm">
+        <div class="flex flex-col lg:flex-row gap-4 items-center">
             <!-- Search -->
-            <div class="lg:col-span-4 relative">
-                <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">🔍</span>
-                <input type="text" id="filter-search" placeholder="Buscar por nombre..." class="w-full pl-10 pr-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500 bg-transparent">
+            <div class="relative flex-grow w-full lg:w-auto">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input type="text" id="filter-search" placeholder="Buscar..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border-0 bg-gray-100 dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 transition-all placeholder-gray-500">
             </div>
             
-            <!-- Sort -->
-            <div class="lg:col-span-2">
-                <select id="filter-sort" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500 bg-transparent">
-                    <option value="date-desc">📅 Fecha (Reciente)</option>
-                    <option value="date-asc">📅 Fecha (Antiguo)</option>
-                    <option value="amount-desc">💰 Cantidad (Mayor)</option>
-                    <option value="amount-asc">💰 Cantidad (Menor)</option>
+            <div class="flex gap-2 w-full lg:w-auto overflow-x-auto pb-2 lg:pb-0 hide-scrollbar">
+                <!-- Sort -->
+                <select id="filter-sort" class="px-4 py-2.5 rounded-xl border-0 bg-gray-100 dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 text-sm whitespace-nowrap">
+                    <option value="date-desc">Fecha: Más reciente</option>
+                    <option value="date-asc">Fecha: Más antigua</option>
+                    <option value="amount-desc">Cantidad: Mayor a menor</option>
+                    <option value="amount-asc">Cantidad: Menor a mayor</option>
                 </select>
-            </div>
 
-            <!-- Date Filter -->
-            <div class="lg:col-span-3 flex gap-2">
-                <input type="date" id="filter-date-start" class="w-full px-2 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500 bg-transparent text-sm" placeholder="Desde">
-                <input type="date" id="filter-date-end" class="w-full px-2 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500 bg-transparent text-sm" placeholder="Hasta">
-            </div>
+                <!-- Date Range -->
+                <input type="date" id="filter-date-start" class="px-3 py-2.5 rounded-xl border-0 bg-gray-100 dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 text-sm">
+                <input type="date" id="filter-date-end" class="px-3 py-2.5 rounded-xl border-0 bg-gray-100 dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 text-sm">
+                
+                <!-- Amount Range -->
+                <input type="number" id="filter-amount-min" placeholder="Min €" class="w-24 px-3 py-2.5 rounded-xl border-0 bg-gray-100 dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 text-sm">
+                <input type="number" id="filter-amount-max" placeholder="Max €" class="w-24 px-3 py-2.5 rounded-xl border-0 bg-gray-100 dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 text-sm">
 
-             <!-- Amount Filter & Reset -->
-             <div class="lg:col-span-3 flex gap-2 items-center">
-                <input type="number" id="filter-amount-min" class="w-full px-3 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500 bg-transparent text-sm" placeholder="Min €">
-                <input type="number" id="filter-amount-max" class="w-full px-3 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500 bg-transparent text-sm" placeholder="Max €">
-                <button id="btn-reset-filters" class="p-2 theme-text-expense hover:opacity-75 transition-opacity text-2xl font-bold leading-none" title="Restablecer filtros">
-                    ×
+                <button id="btn-reset-filters" class="p-2.5 rounded-xl bg-gray-200 dark:bg-gray-700 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-500 hover:text-red-500 transition-colors" title="Limpiar filtros">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                 </button>
             </div>
         </div>
     </div>
     
     <!-- Piggybanks Section -->
-    <div id="piggybanks-section" class="mb-8">
-     <h2 class="text-3xl font-bold theme-text-primary mb-4">Mis Huchas</h2>
+    <div id="piggybanks-section" class="space-y-4">
+     <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-bold theme-text-primary flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Mis Huchas
+        </h2>
+     </div>
+     
      <div id="piggybanks-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-     <div id="no-piggybanks" class="theme-bg-secondary bg-opacity-50 rounded-2xl p-8 text-center theme-text-secondary border theme-border border-dashed">
-      <p class="text-xl">No tienes huchas creadas. ¡Crea una para empezar a ahorrar!</p>
+     
+     <div id="no-piggybanks" class="hidden glass rounded-3xl p-12 text-center border-dashed border-2">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
+          <span class="text-4xl">🐷</span>
+      </div>
+      <h3 class="text-xl font-semibold theme-text-primary mb-2">No tienes huchas</h3>
+      <p class="theme-text-secondary">Crea una para organizar tus ahorros o presupuestos.</p>
      </div>
     </div>
     
-    <!-- Transactions Section -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-     <!-- Income -->
-     <div class="theme-bg-secondary rounded-3xl shadow-xl p-6 theme-border border transition-colors duration-300">
-      <h2 class="text-2xl font-bold theme-text-primary mb-4 flex items-center gap-2"><span class="text-green-500">📈</span> Ingresos</h2>
-      <div id="income-list" class="space-y-3 max-h-96 overflow-y-auto custom-scrollbar"></div>
-      <div id="no-income" class="theme-text-secondary text-center py-8">
-       <p>No hay ingresos registrados</p>
+    <!-- Transactions Split -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+     <!-- Income Column -->
+     <div class="glass rounded-3xl p-6 shadow-lg h-full flex flex-col">
+      <h2 class="text-xl font-bold theme-text-primary mb-6 flex items-center gap-2 pb-4 border-b border-gray-200 dark:border-gray-700">
+          <div class="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+          </div>
+          Ingresos
+      </h2>
+      <div id="income-list" class="space-y-3 flex-grow overflow-y-auto max-h-[500px] pr-2 custom-scrollbar"></div>
+      <div id="no-income" class="theme-text-secondary text-center py-12 flex flex-col items-center justify-center opacity-60">
+       <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-3 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+       </svg>
+       <p>Sin ingresos registrados</p>
       </div>
      </div>
-     <!-- Expenses -->
-     <div class="theme-bg-secondary rounded-3xl shadow-xl p-6 theme-border border transition-colors duration-300">
-      <h2 class="text-2xl font-bold theme-text-primary mb-4 flex items-center gap-2"><span class="text-red-500">📉</span> Gastos</h2>
-      <div id="expense-list" class="space-y-3 max-h-96 overflow-y-auto custom-scrollbar"></div>
-      <div id="no-expenses" class="theme-text-secondary text-center py-8">
-       <p>No hay gastos registrados</p>
+     
+     <!-- Expenses Column -->
+     <div class="glass rounded-3xl p-6 shadow-lg h-full flex flex-col">
+      <h2 class="text-xl font-bold theme-text-primary mb-6 flex items-center gap-2 pb-4 border-b border-gray-200 dark:border-gray-700">
+        <div class="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
+            </svg>
+        </div>
+        Gastos
+      </h2>
+      <div id="expense-list" class="space-y-3 flex-grow overflow-y-auto max-h-[500px] pr-2 custom-scrollbar"></div>
+      <div id="no-expenses" class="theme-text-secondary text-center py-12 flex flex-col items-center justify-center opacity-60">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-3 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+       <p>Sin gastos registrados</p>
       </div>
      </div>
     </div>
     
    </div>
 
+   <!-- Modal Template (Reused Structure) -->
    <!-- Modal for Income -->
-   <div id="modal-income" class="fixed inset-0 bg-black/50 modal-backdrop hidden items-center justify-center z-50">
-    <div class="theme-bg-secondary rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 animate-slide-in theme-border border">
-     <h3 class="text-3xl font-bold theme-text-primary mb-6">💵 Nuevo Ingreso</h3>
-     <form id="form-income">
-      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Concepto</label> 
-          <input type="text" id="income-concept" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-green-500" placeholder="Ej: Salario" required>
+   <div id="modal-income" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="glass rounded-3xl shadow-2xl w-full max-w-md animate-slide-in overflow-hidden">
+     <div class="p-6 border-b border-gray-100 dark:border-gray-700">
+         <h3 class="text-2xl font-bold theme-text-primary flex items-center gap-2">
+            <span class="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg text-green-600 text-xl">💵</span> 
+            Nuevo Ingreso
+         </h3>
+     </div>
+     <form id="form-income" class="p-6 space-y-4">
+      <div>
+          <label class="block text-sm font-medium theme-text-secondary mb-1">Concepto</label> 
+          <input type="text" id="income-concept" class="w-full px-4 py-3 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all" placeholder="Ej: Nómina" required>
       </div>
-      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Cantidad</label> 
-          <input type="number" id="income-amount" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-green-500" placeholder="0.00" required>
-      </div>
-      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Divisa</label> 
-          <select id="income-currency" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-green-500"> <option value="€">€ - Euro</option> <option value="$">$ - Dólar</option> </select>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm font-medium theme-text-secondary mb-1">Cantidad</label> 
+            <input type="number" id="income-amount" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all" placeholder="0.00" required>
+        </div>
+        <div>
+            <label class="block text-sm font-medium theme-text-secondary mb-1">Divisa</label> 
+            <select id="income-currency" class="w-full px-4 py-3 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"> <option value="€">€ Euro</option> <option value="$">$ Dólar</option> </select>
+        </div>
       </div>
 
-      <div class="flex items-center gap-3 mb-6 p-3 rounded-xl theme-bg-primary bg-opacity-50 border theme-border">
-          <input type="checkbox" id="income-external" class="w-5 h-5 accent-green-500 rounded focus:ring-green-500 cursor-pointer">
-          <label for="income-external" class="theme-text-primary text-sm font-medium cursor-pointer select-none">
-              Ingreso externo <span class="block text-xs theme-text-secondary font-normal">No se suma al saldo total</span>
+      <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 flex items-start gap-3">
+          <input type="checkbox" id="income-external" class="mt-1 w-5 h-5 text-green-600 rounded border-gray-300 focus:ring-green-500">
+          <label for="income-external" class="text-sm cursor-pointer select-none">
+              <span class="font-medium theme-text-primary block">Ingreso externo</span>
+              <span class="theme-text-secondary text-xs">No se sumará a tu balance total (solo registro).</span>
           </label>
       </div>
 
-      <div class="mb-6"><label class="block theme-text-secondary font-semibold mb-2">¿Destinar a una hucha?</label> 
-          <select id="income-piggybank" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-green-500"> <option value="">No, al saldo global</option> </select>
+      <div>
+          <label class="block text-sm font-medium theme-text-secondary mb-1">Destino (Opcional)</label> 
+          <select id="income-piggybank" class="w-full px-4 py-3 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"> <option value="">Saldo General (Sin hucha)</option> </select>
       </div>
-      <div class="flex gap-3">
-          <button type="submit" class="flex-1 theme-btn-income font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Añadir </button> 
-          <button type="button" id="btn-cancel-income" class="flex-1 theme-btn-secondary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cancelar </button>
+
+      <div class="flex gap-3 pt-4">
+          <button type="button" id="btn-cancel-income" class="flex-1 btn btn-secondary py-3 px-6 rounded-xl font-medium">Cancelar</button>
+          <button type="submit" class="flex-1 btn btn-income py-3 px-6 rounded-xl font-medium">Guardar Ingreso</button> 
       </div>
      </form>
     </div>
    </div>
 
    <!-- Modal for Expense -->
-   <div id="modal-expense" class="fixed inset-0 bg-black/50 modal-backdrop hidden items-center justify-center z-50">
-    <div class="theme-bg-secondary rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 animate-slide-in theme-border border">
-     <h3 class="text-3xl font-bold theme-text-primary mb-6">💸 Nuevo Gasto</h3>
-     <form id="form-expense">
-      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Concepto</label> 
-          <input type="text" id="expense-concept" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-red-500" placeholder="Ej: Compra supermercado" required>
+   <div id="modal-expense" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="glass rounded-3xl shadow-2xl w-full max-w-md animate-slide-in overflow-hidden">
+     <div class="p-6 border-b border-gray-100 dark:border-gray-700">
+         <h3 class="text-2xl font-bold theme-text-primary flex items-center gap-2">
+            <span class="p-2 bg-red-100 dark:bg-red-900/50 rounded-lg text-red-600 text-xl">💸</span> 
+            Nuevo Gasto
+         </h3>
+     </div>
+     <form id="form-expense" class="p-6 space-y-4">
+      <div>
+          <label class="block text-sm font-medium theme-text-secondary mb-1">Concepto</label> 
+          <input type="text" id="expense-concept" class="w-full px-4 py-3 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all" placeholder="Ej: Supermercado" required>
       </div>
-      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Cantidad</label> 
-          <input type="number" id="expense-amount" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-red-500" placeholder="0.00" required>
-      </div>
-      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Divisa</label> 
-          <select id="expense-currency" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-red-500"> <option value="€">€ - Euro</option> <option value="$">$ - Dólar</option> </select>
+      <div class="grid grid-cols-2 gap-4">
+          <div>
+              <label class="block text-sm font-medium theme-text-secondary mb-1">Cantidad</label> 
+              <input type="number" id="expense-amount" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all" placeholder="0.00" required>
+          </div>
+          <div>
+              <label class="block text-sm font-medium theme-text-secondary mb-1">Divisa</label> 
+              <select id="expense-currency" class="w-full px-4 py-3 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all"> <option value="€">€ Euro</option> <option value="$">$ Dólar</option> </select>
+          </div>
       </div>
       
-      <div class="flex items-center gap-3 mb-6 p-3 rounded-xl theme-bg-primary bg-opacity-50 border theme-border">
-          <input type="checkbox" id="expense-external" class="w-5 h-5 accent-red-500 rounded focus:ring-red-500 cursor-pointer">
-          <label for="expense-external" class="theme-text-primary text-sm font-medium cursor-pointer select-none">
-              Gasto externo <span class="block text-xs theme-text-secondary font-normal">No se descuenta del saldo total</span>
+      <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 flex items-start gap-3">
+          <input type="checkbox" id="expense-external" class="mt-1 w-5 h-5 text-red-600 rounded border-gray-300 focus:ring-red-500">
+          <label for="expense-external" class="text-sm cursor-pointer select-none">
+              <span class="font-medium theme-text-primary block">Gasto externo</span>
+              <span class="theme-text-secondary text-xs">No se descontará de tu balance total.</span>
           </label>
       </div>
 
-      <div class="mb-6">
-          <label class="block theme-text-secondary font-semibold mb-2">Asociar a una hucha</label> 
-          <select id="expense-piggybank" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-red-500 mb-3"> <option value="">No, gasto general</option> </select>
+      <div>
+          <label class="block text-sm font-medium theme-text-secondary mb-1">Vincular a Hucha</label> 
+          <select id="expense-piggybank" class="w-full px-4 py-3 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all mb-2"> <option value="">Sin vincular (Gasto general)</option> </select>
           
-          <div class="flex items-center gap-2 mb-3">
-              <input type="checkbox" id="expense-create-piggybank" class="w-5 h-5 accent-red-500 rounded focus:ring-red-500">
-              <label for="expense-create-piggybank" class="theme-text-secondary text-sm select-none cursor-pointer">Crear nueva hucha vinculada</label>
+          <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" id="expense-create-piggybank" class="w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500">
+              <label for="expense-create-piggybank" class="text-sm theme-text-secondary cursor-pointer">Crear nueva hucha para este gasto</label>
           </div>
           
-          <div id="expense-new-piggybank-container" class="hidden animate-fade-in">
-               <input type="text" id="expense-new-piggybank-name" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-red-500" placeholder="Nombre de la nueva hucha">
-               <p class="text-xs theme-text-secondary mt-1 ml-1">El objetivo se actualizará automáticamente con cada gasto.</p>
+          <div id="expense-new-piggybank-container" class="hidden animate-fade-in pl-6 border-l-2 border-red-200 dark:border-red-900 ml-1">
+               <input type="text" id="expense-new-piggybank-name" class="w-full px-4 py-2 rounded-lg text-sm border focus:ring-2 focus:ring-red-500 outline-none" placeholder="Nombre de la categoría/hucha">
+               <p class="text-xs text-red-500 mt-1">Se creará una hucha de tipo "Presupuesto" para rastrear este gasto.</p>
           </div>
       </div>
-      <div class="flex gap-3">
-          <button type="submit" class="flex-1 theme-btn-expense font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Añadir </button> 
-          <button type="button" id="btn-cancel-expense" class="flex-1 theme-btn-secondary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cancelar </button>
+
+      <div class="flex gap-3 pt-4">
+          <button type="button" id="btn-cancel-expense" class="flex-1 btn btn-secondary py-3 px-6 rounded-xl font-medium">Cancelar</button>
+          <button type="submit" class="flex-1 btn btn-expense py-3 px-6 rounded-xl font-medium">Registrar Gasto</button> 
       </div>
      </form>
     </div>
    </div>
 
    <!-- Modal for Piggybank -->
-   <div id="modal-piggybank" class="fixed inset-0 bg-black/50 modal-backdrop hidden items-center justify-center z-50">
-    <div class="theme-bg-secondary rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 animate-slide-in theme-border border">
-     <h3 class="text-3xl font-bold theme-text-primary mb-6">🐷 Nueva Hucha</h3>
-     <form id="form-piggybank">
-      <div class="mb-4">
-          <label class="block theme-text-secondary font-semibold mb-2">Tipo de Hucha</label>
-          <div class="flex gap-4">
-              <label class="flex items-center cursor-pointer">
-                  <input type="radio" name="piggybank-type" value="savings" checked class="w-5 h-5 accent-purple-500">
-                  <span class="ml-2 theme-text-primary">Ahorro</span>
+   <div id="modal-piggybank" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="glass rounded-3xl shadow-2xl w-full max-w-md animate-slide-in overflow-hidden">
+     <div class="p-6 border-b border-gray-100 dark:border-gray-700">
+         <h3 class="text-2xl font-bold theme-text-primary">🐷 Nueva Hucha</h3>
+     </div>
+     <form id="form-piggybank" class="p-6 space-y-4">
+      <div>
+          <label class="block text-sm font-medium theme-text-secondary mb-2">Tipo de Hucha</label>
+          <div class="grid grid-cols-2 gap-3">
+              <label class="cursor-pointer">
+                  <input type="radio" name="piggybank-type" value="savings" checked class="peer sr-only">
+                  <div class="p-3 rounded-xl border-2 border-transparent bg-gray-100 dark:bg-gray-800 peer-checked:border-purple-500 peer-checked:bg-purple-50 dark:peer-checked:bg-purple-900/20 transition-all text-center">
+                      <span class="block text-2xl mb-1">🎯</span>
+                      <span class="font-medium theme-text-primary">Ahorro</span>
+                  </div>
               </label>
-              <label class="flex items-center cursor-pointer">
-                  <input type="radio" name="piggybank-type" value="budget" class="w-5 h-5 accent-purple-500">
-                  <span class="ml-2 theme-text-primary">Presupuesto</span>
+              <label class="cursor-pointer">
+                  <input type="radio" name="piggybank-type" value="budget" class="peer sr-only">
+                  <div class="p-3 rounded-xl border-2 border-transparent bg-gray-100 dark:bg-gray-800 peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/20 transition-all text-center">
+                      <span class="block text-2xl mb-1">📊</span>
+                      <span class="font-medium theme-text-primary">Presupuesto</span>
+                  </div>
               </label>
           </div>
       </div>
       
-      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Nombre</label> 
-          <input type="text" id="piggybank-name" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" placeholder="Ej: Vacaciones" required>
+      <div>
+          <label class="block text-sm font-medium theme-text-secondary mb-1">Nombre</label> 
+          <input type="text" id="piggybank-name" class="w-full px-4 py-3 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all" placeholder="Ej: Vacaciones Verano" required>
       </div>
       
       <!-- Savings Fields -->
       <div id="piggybank-savings-fields">
-          <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Objetivo</label> 
-              <input type="number" id="piggybank-goal" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" placeholder="0.00">
+          <div><label class="block text-sm font-medium theme-text-secondary mb-1">Objetivo a alcanzar</label> 
+              <input type="number" id="piggybank-goal" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all" placeholder="0.00">
           </div>
       </div>
 
       <!-- Budget Fields -->
-      <div id="piggybank-budget-fields" class="hidden">
-          <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Cantidad Inicial</label> 
-              <input type="number" id="piggybank-start-amount" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" placeholder="0.00">
+      <div id="piggybank-budget-fields" class="hidden space-y-4">
+          <div><label class="block text-sm font-medium theme-text-secondary mb-1">Presupuesto Inicial</label> 
+              <input type="number" id="piggybank-start-amount" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all" placeholder="0.00">
           </div>
-          <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Origen de los fondos</label> 
-              <select id="piggybank-source" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500">
-                  <option value="new">Ingreso nuevo (Externo)</option>
-                  <option value="balance">Descontar del saldo actual</option>
+          <div><label class="block text-sm font-medium theme-text-secondary mb-1">Origen de los fondos</label> 
+              <select id="piggybank-source" class="w-full px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
+                  <option value="new">Dinero Extra (Ingreso nuevo)</option>
+                  <option value="balance">Mover de mi saldo actual</option>
               </select>
           </div>
       </div>
 
-      <div class="mb-6"><label class="block theme-text-secondary font-semibold mb-2">Divisa</label> 
-          <select id="piggybank-currency" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500"> <option value="€">€ - Euro</option> <option value="$">$ - Dólar</option> </select>
+      <div><label class="block text-sm font-medium theme-text-secondary mb-1">Divisa</label> 
+          <select id="piggybank-currency" class="w-full px-4 py-3 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"> <option value="€">€ Euro</option> <option value="$">$ Dólar</option> </select>
       </div>
-            <div class="flex gap-3"><button type="submit" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Crear </button> <button type="button" id="btn-cancel-piggybank" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cancelar </button>
-            </div>
-           </form>
-          </div>
-         </div>
+
+      <div class="flex gap-3 pt-4">
+          <button type="button" id="btn-cancel-piggybank" class="flex-1 btn btn-secondary py-3 px-6 rounded-xl font-medium">Cancelar</button>
+          <button type="submit" class="flex-1 btn btn-gold py-3 px-6 rounded-xl font-medium">Crear Hucha</button> 
+      </div>
+     </form>
+    </div>
+   </div>
          
    <!-- Modal for Withdraw/Spend -->
-   <div id="modal-withdraw" class="fixed inset-0 bg-black/50 modal-backdrop hidden items-center justify-center z-50">
-    <div class="theme-bg-secondary rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 animate-slide-in theme-border border">
-     <h3 id="withdraw-modal-title" class="text-3xl font-bold theme-text-primary mb-6">💸 Gastar de la Hucha</h3>
-     <p id="withdraw-modal-desc" class="theme-text-secondary mb-4">Registrar un gasto directamente desde el presupuesto de la hucha.</p>
-     <form id="form-withdraw">
+   <div id="modal-withdraw" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="glass rounded-3xl shadow-2xl w-full max-w-md animate-slide-in overflow-hidden">
+     <div class="p-6 border-b border-gray-100 dark:border-gray-700">
+         <h3 id="withdraw-modal-title" class="text-2xl font-bold theme-text-primary">💸 Gastar de Hucha</h3>
+         <p id="withdraw-modal-desc" class="text-sm theme-text-secondary mt-1">Registra un gasto usando los fondos de esta hucha.</p>
+     </div>
+     <form id="form-withdraw" class="p-6 space-y-4">
       <input type="hidden" id="withdraw-piggybank-id">
-      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Asunto (Opcional)</label> 
-          <input type="text" id="withdraw-subject" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" placeholder="Ej: Cena">
+      <div><label class="block text-sm font-medium theme-text-secondary mb-1">Concepto / Asunto</label> 
+          <input type="text" id="withdraw-subject" class="w-full px-4 py-3 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all" placeholder="Ej: Cena">
       </div>
-      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Cantidad</label> 
-          <input type="number" id="withdraw-amount" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" placeholder="0.00" required>
+      <div><label class="block text-sm font-medium theme-text-secondary mb-1">Cantidad</label> 
+          <input type="number" id="withdraw-amount" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all" placeholder="0.00" required>
       </div>
       
-      <div id="withdraw-transfer-container" class="flex items-center gap-3 mb-6 p-3 rounded-xl theme-bg-primary bg-opacity-50 border theme-border">
-          <input type="checkbox" id="withdraw-to-global" class="w-5 h-5 accent-blue-500 rounded focus:ring-blue-500 cursor-pointer">
-          <label for="withdraw-to-global" class="theme-text-primary text-sm font-medium cursor-pointer select-none">
-              Transferir al saldo global <span class="block text-xs theme-text-secondary font-normal">El dinero saldrá de la hucha y se sumará al total.</span>
+      <div id="withdraw-transfer-container" class="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 flex items-start gap-3">
+          <input type="checkbox" id="withdraw-to-global" class="mt-1 w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+          <label for="withdraw-to-global" class="text-sm cursor-pointer select-none">
+              <span class="font-medium theme-text-primary block">Transferir a Saldo Global</span>
+              <span class="theme-text-secondary text-xs">Mover el dinero al saldo principal en lugar de gastarlo.</span>
           </label>
       </div>
 
-      <div class="flex gap-3">
-          <button type="submit" class="flex-1 theme-btn-expense font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Gastar </button> 
-          <button type="button" id="btn-cancel-withdraw" class="flex-1 theme-btn-secondary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cancelar </button>
+      <div class="flex gap-3 pt-4">
+          <button type="button" id="btn-cancel-withdraw" class="flex-1 btn btn-secondary py-3 px-6 rounded-xl font-medium">Cancelar</button>
+          <button type="submit" class="flex-1 btn btn-expense py-3 px-6 rounded-xl font-medium">Confirmar</button> 
       </div>
      </form>
     </div>
    </div>
 
    <!-- Modal for Edit Piggybank -->
-         <div id="modal-piggybank-edit" class="fixed inset-0 bg-black/50 modal-backdrop hidden items-center justify-center z-50">
-          <div class="theme-bg-secondary rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 animate-slide-in theme-border border">
-           <h3 class="text-3xl font-bold theme-text-primary mb-6">✏️ Editar Hucha</h3>
-           <form id="form-piggybank-edit">
-            <input type="hidden" id="edit-piggybank-id">
-            <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Nombre</label> <input type="text" id="edit-piggybank-name" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" required>
-            </div>
-            <div id="edit-piggybank-goal-container" class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Objetivo</label> <input type="number" id="edit-piggybank-goal" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500">
-            </div>
-            <div class="flex gap-3"><button type="submit" class="flex-1 theme-btn-primary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Guardar </button> <button type="button" id="btn-cancel-piggybank-edit" class="flex-1 theme-btn-secondary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cancelar </button>
-            </div>
-           </form>
+    <div id="modal-piggybank-edit" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="glass rounded-3xl shadow-2xl w-full max-w-md animate-slide-in overflow-hidden">
+        <div class="p-6 border-b border-gray-100 dark:border-gray-700">
+           <h3 class="text-2xl font-bold theme-text-primary">✏️ Editar Hucha</h3>
+        </div>
+        <form id="form-piggybank-edit" class="p-6 space-y-4">
+        <input type="hidden" id="edit-piggybank-id">
+        <div><label class="block text-sm font-medium theme-text-secondary mb-1">Nombre</label> <input type="text" id="edit-piggybank-name" class="w-full px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all" required>
+        </div>
+        <div id="edit-piggybank-goal-container">
+            <label class="block text-sm font-medium theme-text-secondary mb-1">Nuevo Objetivo</label> <input type="number" id="edit-piggybank-goal" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
+        </div>
+        <div class="flex gap-3 pt-4">
+            <button type="button" id="btn-cancel-piggybank-edit" class="flex-1 btn btn-secondary py-3 px-6 rounded-xl font-medium">Cancelar</button>
+            <button type="submit" class="flex-1 btn btn-primary py-3 px-6 rounded-xl font-medium">Guardar Cambios</button> 
+        </div>
+        </form>
+    </div>
+    </div>
+
+   <!-- Modal for Exchange -->
+   <div id="modal-exchange" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="glass rounded-3xl shadow-2xl w-full max-w-md animate-slide-in overflow-hidden">
+     <div class="p-6 border-b border-gray-100 dark:border-gray-700">
+         <h3 class="text-2xl font-bold theme-text-primary">💱 Cambio de Divisa</h3>
+     </div>
+     <form id="form-exchange" class="p-6 space-y-6">
+       <div class="space-y-4">
+          <div class="relative">
+              <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">Vender (Origen)</label> 
+              <div class="flex">
+                  <input type="number" id="exchange-amount-from" min="0" step="0.01" class="flex-grow px-4 py-3 rounded-l-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all" placeholder="0.00" required>
+                  <select id="exchange-currency-from" class="w-24 px-2 py-3 bg-gray-100 dark:bg-gray-800 rounded-r-xl border-l-0 focus:ring-2 focus:ring-blue-500 outline-none"> <option value="€">EUR</option> <option value="$">USD</option> </select>
+              </div>
           </div>
-         </div><!-- Modal for Exchange -->
-   <div id="modal-exchange" class="fixed inset-0 bg-black/50 modal-backdrop hidden items-center justify-center z-50">
-    <div class="theme-bg-secondary rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 animate-slide-in theme-border border">
-     <h3 class="text-3xl font-bold theme-text-primary mb-6">💱 Cambio de Divisa</h3>
-     <form id="form-exchange">
-       <div class="grid grid-cols-2 gap-4">
-          <div class="mb-4">
-              <label class="block theme-text-secondary font-semibold mb-2">Vender (Origen)</label> 
-              <input type="number" id="exchange-amount-from" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" placeholder="0.00" required>
-              <select id="exchange-currency-from" class="w-full px-4 py-3 mt-2 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500"> <option value="€">€ - Euro</option> <option value="$">$ - Dólar</option> </select>
+          
+          <div class="flex items-center justify-between gap-4">
+             <div class="h-px bg-gray-200 dark:bg-gray-700 flex-grow"></div>
+             <div class="text-2xl text-gray-400">⬇️</div>
+             <div class="h-px bg-gray-200 dark:bg-gray-700 flex-grow"></div>
           </div>
-          <div class="mb-4">
-              <label class="block theme-text-secondary font-semibold mb-2">Tasa de cambio</label> 
-              <input type="number" id="exchange-rate" step="0.0001" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" placeholder="1.0000" required>
-              <p class="text-xs theme-text-secondary mt-1">Se actualiza automáticamente</p>
+          
+           <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">Tasa de cambio</label> 
+              <input type="number" id="exchange-rate" step="0.0001" class="w-full px-4 py-2 rounded-xl text-center font-mono bg-gray-50 dark:bg-gray-800/50 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="1.0000" required>
           </div>
-          <div class="mb-6">
-              <label class="block theme-text-secondary font-semibold mb-2">Comprar (Destino)</label> 
-              <input type="number" id="exchange-amount-to" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border bg-gray-100 dark:bg-gray-800" placeholder="0.00" readonly>
-              <select id="exchange-currency-to" class="w-full px-4 py-3 mt-2 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500"> <option value="$">$ - Dólar</option> <option value="€">€ - Euro</option> </select>
+
+          <div class="relative">
+              <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">Comprar (Destino)</label> 
+               <div class="flex">
+                  <input type="number" id="exchange-amount-to" step="0.01" class="flex-grow px-4 py-3 rounded-l-xl bg-gray-50 dark:bg-gray-800/50 cursor-not-allowed outline-none" placeholder="0.00" readonly>
+                  <select id="exchange-currency-to" class="w-24 px-2 py-3 bg-gray-100 dark:bg-gray-800 rounded-r-xl border-l-0 focus:ring-2 focus:ring-blue-500 outline-none"> <option value="$">USD</option> <option value="€">EUR</option> </select>
+              </div>
           </div>
        </div>
-      <div class="flex gap-3">
-          <button type="submit" class="flex-1 theme-btn-primary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cambiar </button> 
-          <button type="button" id="btn-cancel-exchange" class="flex-1 theme-btn-secondary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cancelar </button>
+      <div class="flex gap-3 pt-4">
+          <button type="button" id="btn-cancel-exchange" class="flex-1 btn btn-secondary py-3 px-6 rounded-xl font-medium">Cancelar</button>
+          <button type="submit" class="flex-1 btn btn-primary py-3 px-6 rounded-xl font-medium">Confirmar Cambio</button> 
       </div>
      </form>
     </div>
    </div>
 
    <!-- Modal for Refill Budget -->
-   <div id="modal-refill" class="fixed inset-0 bg-black/50 modal-backdrop hidden items-center justify-center z-50">
-    <div class="theme-bg-secondary rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 animate-slide-in theme-border border">
-     <h3 class="text-3xl font-bold theme-text-primary mb-6">📥 Rellenar Presupuesto</h3>
-     <form id="form-refill">
+   <div id="modal-refill" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="glass rounded-3xl shadow-2xl w-full max-w-md animate-slide-in overflow-hidden">
+     <div class="p-6 border-b border-gray-100 dark:border-gray-700">
+         <h3 class="text-2xl font-bold theme-text-primary">📥 Rellenar Hucha</h3>
+     </div>
+     <form id="form-refill" class="p-6 space-y-4">
       <input type="hidden" id="refill-piggybank-id">
-      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Cantidad a rellenar</label> 
-          <input type="number" id="refill-amount" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-green-500" placeholder="0.00" required>
+      <div><label class="block text-sm font-medium theme-text-secondary mb-1">Cantidad a añadir</label> 
+          <input type="number" id="refill-amount" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all" placeholder="0.00" required>
       </div>
-      <div class="mb-6"><label class="block theme-text-secondary font-semibold mb-2">Origen de los fondos</label> 
-          <select id="refill-source" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-green-500">
-              <option value="balance">Descontar del saldo global</option>
-              <option value="new">Dinero externo (No descontar)</option>
+      <div><label class="block text-sm font-medium theme-text-secondary mb-1">Origen de los fondos</label> 
+          <select id="refill-source" class="w-full px-4 py-3 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all">
+              <option value="balance">Mover de mi Saldo Global</option>
+              <option value="new">Ingreso Externo (Dinero nuevo)</option>
           </select>
       </div>
-      <div class="flex gap-3">
-          <button type="submit" class="flex-1 theme-btn-income font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Rellenar </button> 
-          <button type="button" id="btn-cancel-refill" class="flex-1 theme-btn-secondary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cancelar </button>
+      <div class="flex gap-3 pt-4">
+          <button type="button" id="btn-cancel-refill" class="flex-1 btn btn-secondary py-3 px-6 rounded-xl font-medium">Cancelar</button>
+          <button type="submit" class="flex-1 btn btn-income py-3 px-6 rounded-xl font-medium">Añadir Fondos</button> 
       </div>
      </form>
     </div>
    </div>
 
    <!-- Modal for Edit Transaction -->
-   <div id="modal-edit" class="fixed inset-0 bg-black/50 modal-backdrop hidden items-center justify-center z-50">
-    <div class="theme-bg-secondary rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 animate-slide-in theme-border border">
-     <h3 id="edit-modal-title" class="text-3xl font-bold theme-text-primary mb-6">✏️ Editar Transacción</h3>
-     <form id="form-edit">
-      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Concepto</label> 
-          <input type="text" id="edit-concept" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" required>
+   <div id="modal-edit" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="glass rounded-3xl shadow-2xl w-full max-w-md animate-slide-in overflow-hidden">
+     <div class="p-6 border-b border-gray-100 dark:border-gray-700">
+         <h3 id="edit-modal-title" class="text-2xl font-bold theme-text-primary">✏️ Editar Transacción</h3>
+     </div>
+     <form id="form-edit" class="p-6 space-y-4">
+      <div><label class="block text-sm font-medium theme-text-secondary mb-1">Concepto</label> 
+          <input type="text" id="edit-concept" class="w-full px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all" required>
       </div>
-      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Cantidad</label> 
-          <input type="number" id="edit-amount" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" required>
+      <div class="grid grid-cols-2 gap-4">
+          <div><label class="block text-sm font-medium theme-text-secondary mb-1">Cantidad</label> 
+              <input type="number" id="edit-amount" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all" required>
+          </div>
+          <div><label class="block text-sm font-medium theme-text-secondary mb-1">Divisa</label> 
+              <select id="edit-currency" class="w-full px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"> <option value="€">€ Euro</option> <option value="$">$ Dólar</option> </select>
+          </div>
       </div>
-      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Divisa</label> 
-          <select id="edit-currency" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500"> <option value="€">€ - Euro</option> <option value="$">$ - Dólar</option> </select>
+      <div><label class="block text-sm font-medium theme-text-secondary mb-1">Fecha</label> 
+          <input type="date" id="edit-date" class="w-full px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all" required>
       </div>
-      <div class="mb-4"><label class="block theme-text-secondary font-semibold mb-2">Fecha</label> 
-          <input type="date" id="edit-date" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500" required>
-      </div>
-      <div class="mb-6"><label id="edit-piggybank-label" class="block theme-text-secondary font-semibold mb-2">Hucha</label> 
-          <select id="edit-piggybank" class="w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-colors theme-border focus:border-blue-500"> <option value="">Saldo global</option> </select>
+      <div><label id="edit-piggybank-label" class="block text-sm font-medium theme-text-secondary mb-1">Hucha Vinculada</label> 
+          <select id="edit-piggybank" class="w-full px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"> <option value="">Saldo Global</option> </select>
       </div>
       
-      <div id="edit-external-container" class="hidden flex items-center gap-3 mb-6 p-3 rounded-xl theme-bg-primary bg-opacity-50 border theme-border">
-          <input type="checkbox" id="edit-external" class="w-5 h-5 accent-blue-500 rounded focus:ring-blue-500 cursor-pointer">
-          <label for="edit-external" class="theme-text-primary text-sm font-medium cursor-pointer select-none">
-              Gasto externo <span class="block text-xs theme-text-secondary font-normal">No se descuenta del saldo total</span>
+      <div id="edit-external-container" class="hidden p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 flex items-start gap-3">
+          <input type="checkbox" id="edit-external" class="mt-1 w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+          <label for="edit-external" class="text-sm cursor-pointer select-none">
+              <span class="font-medium theme-text-primary block">Transacción Externa</span>
+              <span class="theme-text-secondary text-xs">No afecta al balance total.</span>
           </label>
       </div>
 
-      <div class="flex gap-3">
-          <button type="submit" class="flex-1 theme-btn-primary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Guardar </button> 
-          <button type="button" id="btn-cancel-edit" class="flex-1 theme-btn-secondary font-semibold py-3 px-6 rounded-xl transition-colors text-lg"> Cancelar </button>
+      <div class="flex gap-3 pt-4">
+          <button type="button" id="btn-cancel-edit" class="flex-1 btn btn-secondary py-3 px-6 rounded-xl font-medium">Cancelar</button>
+          <button type="submit" class="flex-1 btn btn-primary py-3 px-6 rounded-xl font-medium">Guardar Cambios</button> 
       </div>
      </form>
     </div>
