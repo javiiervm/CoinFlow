@@ -1,7 +1,8 @@
 import type { Currency, Piggybank, Transaction } from "./models";
+import type { Language } from "./i18n";
 
-export function formatMoney(amount: number, currency: Currency): string {
-  return new Intl.NumberFormat("es-ES", {
+export function formatMoney(amount: number, currency: Currency, language: Language = "en"): string {
+  return new Intl.NumberFormat(language === "es" ? "es-ES" : "en-GB", {
     style: "currency", currency, maximumFractionDigits: 2
   }).format(amount);
 }
@@ -33,13 +34,13 @@ export function monthlySummary(transactions: Transaction[], currency: Currency) 
     }, { income: 0, expense: 0 });
 }
 
-export function cashflowSeries(transactions: Transaction[], currency: Currency, now = new Date()) {
+export function cashflowSeries(transactions: Transaction[], currency: Currency, now = new Date(), language: Language = "en") {
   const months = Array.from({ length: 6 }, (_, index) => {
     const d = new Date(now.getFullYear(), now.getMonth() - 5 + index, 1);
     return {
       year: d.getFullYear(),
       month: d.getMonth(),
-      label: new Intl.DateTimeFormat("es-ES", { month: "short" }).format(d),
+      label: new Intl.DateTimeFormat(language === "es" ? "es-ES" : "en-GB", { month: "short" }).format(d),
       income: 0,
       expense: 0
     };

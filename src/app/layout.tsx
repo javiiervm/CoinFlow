@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "CoinFlow — Tus finanzas, en orden",
-  description: "Gestiona ingresos, gastos, presupuestos y objetivos de ahorro desde un mismo lugar."
+  title: "CoinFlow — Personal finance",
+  description: "Track balances, transactions, budgets and savings in one place."
 };
 
 export const viewport: Viewport = {
@@ -14,7 +14,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es">
+    <html lang="en">
       <body>{children}</body>
     </html>
   );

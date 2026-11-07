@@ -40,3 +40,32 @@ export const demoTransactions: Transaction[] = rows.map((row, index) => ({
   amount: row[2], occurred_on: date(row[3], row[4]), category: row[5],
   piggybank_id: row[6], currency: row[7], external: false
 }));
+
+
+import type { Language } from "./i18n";
+
+// Keep sample data local and translate only the display copy.
+const demoNames: Record<string, string> = {
+  "Viaje a Japón": "Japan trip", "Gastos del mes": "Monthly budget",
+  "Nuevo ordenador": "New computer", "Nómina": "Salary",
+  "Alquiler": "Rent", "Supermercado": "Groceries",
+  "Café y desayuno": "Coffee and breakfast", "Ahorro para Japón": "Japan savings",
+  "Presupuesto mensual": "Monthly budget funding", "Comida del sábado": "Saturday lunch",
+  "Ahorro para PC": "Computer savings", "Transporte": "Transport",
+  "Compras": "Shopping", "Ocio": "Leisure",
+  "Comida": "Food", "Proyecto freelance": "Freelance project"
+};
+
+export function demoTransactionsFor(language: Language): Transaction[] {
+  return demoTransactions.map(transaction => ({
+    ...transaction,
+    concept: language === "en" ? demoNames[transaction.concept] || transaction.concept : transaction.concept
+  }));
+}
+
+export function demoPiggybanksFor(language: Language): Piggybank[] {
+  return demoPiggybanks.map(bank => ({
+    ...bank,
+    name: language === "en" ? demoNames[bank.name] || bank.name : bank.name
+  }));
+}
