@@ -106,8 +106,6 @@ const spanish = {
   "CoinFlow 2.0 · Development preview": "CoinFlow 2.0 · Versión de desarrollo",
   "NEW": "NUEVO",
   "Create piggybank": "Crear hucha",
-  "Add income": "Añadir ingreso",
-  "Add expense": "Añadir gasto",
   "Piggybank name": "Nombre de la hucha",
   "e.g. Holidays": "Ej. Vacaciones",
   "Type": "Tipo",
