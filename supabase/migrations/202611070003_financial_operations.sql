@@ -75,7 +75,7 @@ returns trigger
 language plpgsql
 security invoker
 set search_path=''
-as $
+as $$
 declare
   v_owner uuid;
 begin
@@ -90,7 +90,7 @@ begin
   end if;
   return NEW;
 end;
-$;
+$$;
 
 create trigger account_ledger_write_lock
 before insert or update or delete on public.transactions

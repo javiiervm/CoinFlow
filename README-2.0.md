@@ -83,3 +83,23 @@ For Node.js 22 or newer, run `npm test` (or `npm run test:legacy` / `npm run tes
 - Monthly income/expense charts exclude new internal transfers and exchanges. Imported 1.0 entries still lack operation grouping, so legacy monthly analytics need further reconciliation.
 
 Run the migrations **once, in order**, before attempting any account operation. Never expose the Supabase service-role key to the browser.
+
+
+## Supabase + Vercel preview setup
+
+**Never import personal finance data into a database until the SQL smoke tests pass.**
+The `dev` branch is still a development preview and must not replace the original local backup.
+
+1. Create a **separate Supabase development project** (not production), preferably in an EU region.
+2. In its SQL Editor run `001_init.sql`, `002_legacy_import.sql`, and `003_financial_operations.sql` **in filename order** from `supabase/migrations/`. Do not apply partial migrations if CI is failing.
+3. In Supabase Authentication enable Email sign-up and email confirmation. Add `http://localhost:3000/auth/callback` and `http://localhost:3000/auth/callback?next=%2Fauth%2Fupdate-password` to the allowed redirect URLs; set the site URL for local testing to `http://localhost:3000`.
+4. Put `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in a local, ignored `.env.local` file. These are *public* client configuration values, not service-role secrets.
+5. Connect GitHub `javiiervm/CoinFlow` to Vercel as a Next.js project, with repository root `./`. Keep **`main` as the production branch** and use `dev` for **Preview** deployments only. The legacy Flask code in root is not the entry point.
+6. Define both `NEXT_PUBLIC_` variables in Vercel's **Preview** environment (or scoped to `dev`). Vercel injects public values during build, so redeploy after changing them.
+7. Add the generated **exact Preview origin** to Supabase's Auth redirect allowlist, including `/auth/callback` and `/auth/callback?next=%2Fauth%2Fupdate-password`. Do not guess a Vercel URL; obtain it from the actual deployment.
+8. For a recovery link, use **Settings → Forgot password?**. The callback exchanges the one-time code then opens `/auth/update-password`. Email delivery may need a custom SMTP provider for production.
+9. Create two test users and check that each sees only their own data. Import a **copy of a synthetic** 1.0 `data.json` first and compare EUR/USD balances. Only then consider a copy of real data.
+
+Run `npm run typecheck`, `npm test` and `npm run build` locally. GitHub Actions also runs the migrations on a disposable PostgreSQL service with RLS and finance smoke tests on every push to `dev`.
+
+**Never put Supabase database passwords, JWT signing secrets, service-role keys, or personal `data.json` content in GitHub commits or ChatGPT messages.**

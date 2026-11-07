@@ -479,3 +479,17 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   .bank-actions { gap: 6px; }
   .bank-action-button { font-size: 12px; }
 }
+
+/* Account recovery follows the same visual language as the dashboard. */
+.password-page { min-height:100dvh; display:flex; justify-content:center; align-items:center; padding:24px; }
+.password-panel { width:min(100%,430px); padding:30px; }
+.password-symbol { width:43px; height:43px; display:grid; place-items:center;
+  background:var(--surface-alt); border-radius:12px; color:var(--accent); margin-bottom:22px; }
+.password-panel h1 { margin:12px 0; font-size:25px; letter-spacing:-.8px; }
+.password-panel p { color:var(--muted-strong); line-height:1.6; font-size:13px; margin:0 0 20px; }
+.password-panel .form-stack { margin-top:22px; }
+.password-panel .form-stack p.operation-error { color:var(--pink); margin:0; }
+.password-back { display:inline-flex; align-items:center; gap:8px; color:var(--muted-strong);
+  text-decoration:none; font-weight:650; font-size:13px; margin-top:26px; }
+.password-back:hover { color:var(--text); }
+.password-success { display:flex; gap:10px; align-items:center; color:var(--green); font-size:14px; }

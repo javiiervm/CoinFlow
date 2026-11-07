@@ -150,7 +150,7 @@ export function Dashboard() {
     setBusy(true); setAuthMessage("");
     try {
       if (authMode === "recover") {
-        const { error } = await server.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + "/auth/callback" });
+        const { error } = await server.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + "/auth/callback?next=%2Fauth%2Fupdate-password" });
         if (error) throw error;
         setAuthMessage(t("Check your email for a password recovery link."));
       } else if (authMode === "register") {
