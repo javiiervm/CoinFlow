@@ -1,6 +1,7 @@
 export type Currency = "EUR" | "USD";
 export type TransactionKind = "income" | "expense";
 export type PiggybankKind = "savings" | "budget" | "expense";
+export type FinancialAction = "allocate" | "external_topup" | "withdraw" | "spend" | "exchange";
 
 export interface Transaction {
   id: string;
@@ -16,6 +17,8 @@ export interface Transaction {
   created_at?: string;
   legacy_id?: string | null;
   legacy_record?: Record<string, unknown> | null;
+  operation_id?: string | null;
+  operation_kind?: FinancialAction | null;
 }
 
 export interface Piggybank {

@@ -41,7 +41,7 @@ export function thisMonth(transaction: Transaction, now = new Date()): boolean {
 }
 
 export function monthlySummary(transactions: Transaction[], currency: Currency) {
-  return transactions.filter((t) => t.currency === currency && !t.external && thisMonth(t))
+  return transactions.filter((t) => t.currency === currency && !t.external && thisMonth(t) && (!t.operation_kind || t.operation_kind === "spend"))
     .reduce((result, t) => {
       result[t.type] += t.amount;
       return result;
@@ -59,7 +59,7 @@ export function cashflowSeries(transactions: Transaction[], currency: Currency, 
       expense: 0
     };
   });
-  transactions.filter((t) => t.currency === currency && !t.external).forEach((t) => {
+  transactions.filter((t) => t.currency === currency && !t.external && (!t.operation_kind || t.operation_kind === "spend")).forEach((t) => {
     const d = new Date(t.occurred_on + "T12:00:00");
     const row = months.find((m) => m.year === d.getFullYear() && m.month === d.getMonth());
     if (row) row[t.type] += t.amount;

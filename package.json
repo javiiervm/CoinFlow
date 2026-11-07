@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test:legacy": "node --experimental-strip-types --test tests/legacy-import.test.mjs"
+    "test:legacy": "node --experimental-strip-types --test tests/legacy-import.test.mjs",
+    "test:finance": "node --experimental-strip-types --test tests/finance.test.mjs",
+    "test": "node --experimental-strip-types --test tests/*.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",
@@ -24,5 +26,7 @@
     "@types/react-dom": "^19.0.0",
     "typescript": "^5.8.0"
   },
-  "engines": { "node": ">=20.9.0" }
+  "engines": {
+    "node": ">=20.9.0"
+  }
 }
