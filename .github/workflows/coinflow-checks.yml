@@ -13,7 +13,27 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: coinflow_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: local_test_only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d coinflow_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: local_test_only
+      PGDATABASE: coinflow_test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -27,3 +47,12 @@ jobs:
         run: npm test
       - name: Next.js production build
         run: npm run build
+      - name: Install PostgreSQL client
+        run: sudo apt-get update -qq && sudo apt-get install -y postgresql-client
+      - name: PostgreSQL migrations and RLS smoke tests
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f tests/sql/setup.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/202611070001_init.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/202611070002_legacy_import.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/202611070003_financial_operations.sql
+          psql -X -v ON_ERROR_STOP=1 -f tests/sql/financial-smoke.sql
