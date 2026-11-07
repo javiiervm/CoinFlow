@@ -15,6 +15,7 @@ import { demoPiggybanksFor, demoTransactionsFor } from "@/lib/demo";
 import { categoryLabel, translate, type Language, type TranslationKey, type Translator } from "@/lib/i18n";
 import { cashflowSeries, formatMoney, globalBalance, monthlySummary, piggybankBalance, piggybankProgress } from "@/lib/finance";
 import { getSupabase, supabaseConfigured } from "@/lib/supabase/client";
+import { LegacyImporter } from "@/components/legacy-importer";
 import type { Currency, NewPiggybank, NewTransaction, Piggybank, Transaction, TransactionKind } from "@/lib/models";
 
 type Page = "overview" | "transactions" | "piggybanks" | "analytics" | "settings";
@@ -127,7 +128,7 @@ export function Dashboard() {
   }, [refresh, language]);
 
   const month = useMemo(() => monthlySummary(transactions, currency), [transactions, currency]);
-  const balance = useMemo(() => globalBalance(transactions, currency), [transactions, currency]);
+  const balance = useMemo(() => globalBalance(transactions, currency, piggybanks), [transactions, currency, piggybanks]);
   const series = useMemo(() => cashflowSeries(transactions, currency, new Date(), language), [transactions, currency, language]);
   const visibleTransactions = useMemo(() => transactions
     .filter(t => t.currency === currency)
@@ -324,7 +325,7 @@ export function Dashboard() {
               <button className="text-link" type="button" onClick={()=>{setAuthMode(authMode==="recover"?"login":"recover");setAuthMessage("");}}>{authMode==="recover"?t("Back to sign in"):t("Forgot password?")}</button>
               </form></>}
             </section>
-            <section className="panel settings-card"><div className="panel-heading"><div><span className="eyebrow">{t("APPEARANCE & DATA")}</span><h2>{t("Preferences")}</h2></div><Settings2 size={20}/></div><div className="setting-row"><span>{t("Language")}</span><select className="select-control" value={language} onChange={e=>setLanguage(e.target.value as Language)} aria-label={t("Language")}><option value="en">English</option><option value="es">Español</option></select></div><div className="setting-row"><span>{t("Theme")}</span><button className="outline-button" onClick={()=>setDark(!dark)}>{dark?<Sun size={16}/>:<Moon size={16}/>} {dark?t("Dark"):t("Light")}</button></div><div className="setting-row"><span>{t("Display currency")}</span><select className="select-control" value={currency} onChange={e=>setCurrency(e.target.value as Currency)}><option value="EUR">{t("Euro (EUR)")}</option><option value="USD">{t("Dollar (USD)")}</option></select></div><div className="setting-row"><span>{t("Export transactions")}</span><button className="outline-button" onClick={downloadCSV}><Download size={16}/> CSV</button></div><div className="security-footnote"><ShieldCheck size={17}/> {t("User data is protected by Supabase row-level security.")}</div></section></div>
+            <section className="panel settings-card"><div className="panel-heading"><div><span className="eyebrow">{t("APPEARANCE & DATA")}</span><h2>{t("Preferences")}</h2></div><Settings2 size={20}/></div><div className="setting-row"><span>{t("Language")}</span><select className="select-control" value={language} onChange={e=>setLanguage(e.target.value as Language)} aria-label={t("Language")}><option value="en">English</option><option value="es">Español</option></select></div><div className="setting-row"><span>{t("Theme")}</span><button className="outline-button" onClick={()=>setDark(!dark)}>{dark?<Sun size={16}/>:<Moon size={16}/>} {dark?t("Dark"):t("Light")}</button></div><div className="setting-row"><span>{t("Display currency")}</span><select className="select-control" value={currency} onChange={e=>setCurrency(e.target.value as Currency)}><option value="EUR">{t("Euro (EUR)")}</option><option value="USD">{t("Dollar (USD)")}</option></select></div><div className="setting-row"><span>{t("Export transactions")}</span><button className="outline-button" onClick={downloadCSV}><Download size={16}/> CSV</button></div><div className="security-footnote"><ShieldCheck size={17}/> {t("User data is protected by Supabase row-level security.")}</div></section><LegacyImporter userId={user?.id ?? null} language={language} onImported={() => user ? refresh(user.id) : Promise.resolve()}/></div>
           </>}
 
           <footer className="footer"><span>© {new Date().getFullYear()} · {t("CoinFlow 2.0 · Development preview")}</span></footer>
@@ -355,5 +356,9 @@ function BankProgress({bank,transactions,language,expanded=false}: {bank:Piggyba
 
 function TransactionList({transactions,currency,language,onDelete}: {transactions:Transaction[];currency:Currency;language:Language;onDelete?: (id:string)=>void}) {
   if (!transactions.length) return <div className="empty-panel">{translate(language,"No matching transactions.")}</div>;
-  return <div className="transaction-list">{transactions.map(t=><div className="transaction-row" key={t.id}><div className={`transaction-icon ${t.type}`}>{t.type==="income"?<ArrowDownLeft size={20}/>:<ArrowUpRight size={20}/>}</div><div className="transaction-main"><strong>{t.concept}</strong><span>{categoryLabel(t.category,language)} · {displayDate(t.occurred_on,language)}{t.piggybank_id?" · "+translate(language,"Piggybank"):""}{t.external?" · "+translate(language,"External"):""}</span></div><div className={`transaction-amount ${t.type}`}>{t.type==="income"?"+":"−"}{formatMoney(t.amount,currency,language)}</div>{onDelete && <button className="icon-button danger" onClick={()=>onDelete(t.id)} aria-label={translate(language,"Delete transaction {name}",{name:t.concept})}><Trash2 size={16}/></button>}</div>)}</div>;
+  return <div className="transaction-list">{transactions.map(t=><div className="transaction-row" key={t.id}><div className={`transaction-icon ${t.type}`}>{t.type==="income"?<ArrowDownLeft size={20}/>:<ArrowUpRight size={20}/>}</div><div className="transaction-main"><strong>{t.concept}</strong><span>{categoryLabel(t.category,language)} · {displayDate(t.occurred_on,language)}{t.piggybank_id
+  ? " · " + (typeof t.legacy_record?.piggybank_name === "string" && t.legacy_record.piggybank_name
+    ? t.legacy_record.piggybank_name : translate(language,"Piggybank"))
+  : (typeof t.legacy_record?.piggybank_name === "string" && t.legacy_record.piggybank_name
+    ? " · " + t.legacy_record.piggybank_name : "")}{t.external?" · "+translate(language,"External"):""}</span></div><div className={`transaction-amount ${t.type}`}>{t.type==="income"?"+":"−"}{formatMoney(t.amount,currency,language)}</div>{onDelete && <button className="icon-button danger" onClick={()=>onDelete(t.id)} aria-label={translate(language,"Delete transaction {name}",{name:t.concept})}><Trash2 size={16}/></button>}</div>)}</div>;
 }

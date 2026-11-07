@@ -7,18 +7,32 @@ export function formatMoney(amount: number, currency: Currency, language: Langua
   }).format(amount);
 }
 
+/** Reproduce CoinFlow 1.0 balance semantics for all three piggybank types. */
 export function piggybankBalance(bank: Piggybank, transactions: Transaction[]): number {
-  return transactions.reduce((total, transaction) => {
-    if (transaction.piggybank_id !== bank.id || transaction.currency !== bank.currency) return total;
-    return total + (transaction.type === "income" ? transaction.amount : -transaction.amount);
-  }, 0);
+  let income = 0;
+  let expense = 0;
+  for (const transaction of transactions) {
+    if (transaction.piggybank_id !== bank.id || transaction.currency !== bank.currency) continue;
+    if (transaction.type === "income") income += transaction.amount;
+    else expense += transaction.amount;
+  }
+  // The savings target caps retained funds. Amounts beyond it return to
+  // the global balance, just as in CoinFlow 1.0.
+  return bank.type === "savings" ? Math.min(income, bank.goal) - expense : income - expense;
 }
 
-export function globalBalance(transactions: Transaction[], currency: Currency): number {
-  return transactions.reduce((total, transaction) => {
+export function globalBalance(transactions: Transaction[], currency: Currency, piggybanks: Piggybank[] = []): number {
+  const direct = transactions.reduce((total, transaction) => {
     if (transaction.currency !== currency || transaction.external || transaction.piggybank_id) return total;
     return total + (transaction.type === "income" ? transaction.amount : -transaction.amount);
   }, 0);
+  const overflow = piggybanks.filter(bank => bank.currency === currency && bank.type === "savings")
+    .reduce((total, bank) => {
+      const incomes = transactions.reduce((sum, t) =>
+        t.piggybank_id === bank.id && t.currency === currency && t.type === "income" ? sum + t.amount : sum, 0);
+      return total + Math.max(0, incomes - bank.goal);
+    }, 0);
+  return Math.round((direct + overflow) * 100) / 100;
 }
 
 export function thisMonth(transaction: Transaction, now = new Date()): boolean {
@@ -57,5 +71,9 @@ export function piggybankProgress(bank: Piggybank, transactions: Transaction[]):
   const current = piggybankBalance(bank, transactions);
   if (bank.type === "budget") return 100;
   if (bank.goal <= 0) return 0;
-  return Math.max(0, Math.min(100, (bank.type === "expense" ? current + bank.goal : current) / bank.goal * 100));
+  const progress = bank.type === "expense"
+    ? transactions.filter(t => t.piggybank_id === bank.id && t.currency === bank.currency && t.type === "income")
+      .reduce((sum, t) => sum + t.amount, 0)
+    : current;
+  return Math.max(0, Math.min(100, progress / bank.goal * 100));
 }

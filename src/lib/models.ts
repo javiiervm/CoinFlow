@@ -14,6 +14,8 @@ export interface Transaction {
   piggybank_id: string | null;
   external: boolean;
   created_at?: string;
+  legacy_id?: string | null;
+  legacy_record?: Record<string, unknown> | null;
 }
 
 export interface Piggybank {
@@ -24,6 +26,8 @@ export interface Piggybank {
   goal: number;
   currency: Currency;
   created_at?: string;
+  legacy_id?: string | null;
+  legacy_record?: Record<string, unknown> | null;
 }
 
 export type NewTransaction = Omit<Transaction, "id" | "created_at">;

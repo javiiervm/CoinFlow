@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:legacy": "node --experimental-strip-types --test tests/legacy-import.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",
