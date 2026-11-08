@@ -1,5 +1,5 @@
 -- Exercise real PostgreSQL migration & RLS behavior (not mocks of the ledger).
-DO $
+DO $$
 BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
@@ -15,7 +15,7 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'Internal privileged financial operation is missing';
   END IF;
-END $;
+END $$;
 
 GRANT USAGE ON SCHEMA public TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.transactions TO authenticated;
