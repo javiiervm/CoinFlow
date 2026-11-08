@@ -1,4 +1,22 @@
 -- Exercise real PostgreSQL migration & RLS behavior (not mocks of the ledger).
+DO $
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+    WHERE n.nspname='public' AND p.proname='apply_financial_operation'
+      AND p.prosecdef=false
+  ) THEN
+    RAISE EXCEPTION 'Public financial RPC is not SECURITY INVOKER';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+    WHERE n.nspname='coinflow_internal' AND p.proname='apply_financial_operation'
+      AND p.prosecdef=true
+  ) THEN
+    RAISE EXCEPTION 'Internal privileged financial operation is missing';
+  END IF;
+END $;
+
 GRANT USAGE ON SCHEMA public TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.transactions TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.piggybanks TO authenticated;

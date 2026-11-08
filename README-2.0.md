@@ -24,7 +24,7 @@ To enable accounts and persistent data:
 1. Use the existing **CoinFlow 2.0 Dev** Supabase project (EU, separate from future production). See [Development setup](docs/DEVELOPMENT.md).
 2. Copy `.env.example` to an untracked `.env.local` and insert the project's **publishable** key and URL.
 3. Configure Supabase's local Auth site URL and redirect allowlist in the Dashboard.
-4. Install dependencies, run `npm run dev`, and create a **test account**. The four SQL migrations have been applied to the development project; on a new project apply migrations 001–004 in order.
+4. Install dependencies, run `npm run dev`, and create a **test account**. The four SQL migrations have been applied to the development project; on a new project apply migrations 001–005 in order.
 
 **Never expose service-role or secret keys in client environment variables.**
 
@@ -51,7 +51,7 @@ For a future public launch, add a password-reset completion view, full end-to-en
 ## Import existing CoinFlow 1.0 data.json
 
 1. In the original app, stop Flask and keep a **backup** of the local `data.json` file. Do not overwrite it. It contains `transactions[]` and `piggybanks[]`.
-2. Set up Supabase and apply **all four SQL migrations in order** (including the 2.0 legacy-import migration). Never put a service-role key in the browser.
+2. Set up Supabase and apply **all five SQL migrations in order** (including the 2.0 legacy-import migration). Never put a service-role key in the browser.
 3. Open CoinFlow 2.0 and sign in or register. Go to **Settings → Import from CoinFlow 1.0** (or **Configuración → Importar desde CoinFlow 1.0**).
 4. Select `data.json` (max 5 MB), review transaction/piggybank counts and **EUR/USD global balances**, and compare them with the totals in the original app.
 5. Click **Import data** only after confirming the preview. The browser uploads data only after confirmation. The source file on disk is never modified.
@@ -70,7 +70,7 @@ The import runs within one PostgreSQL transaction through an authenticated Supab
 
 For Node.js 22 or newer, run `npm test` (or `npm run test:legacy` / `npm run test:finance`) to check data migration and business rules. Run `npm run typecheck` and `npm run build` before publishing. A GitHub Actions workflow on `dev` runs the same checks.
 
-### Financial operations (requires SQL migrations 003 and 004)
+### Financial operations (requires SQL migrations 003, 004 and 005)
 
 - On **Piggybanks**, use **Add funds** (from available balance or from external funds), **Withdraw** (back to global balance), or **Spend** (record a real expense using funds held in the piggybank).
 - On **Dashboard / Transactions**, use **Exchange** to move money from EUR to USD or vice versa. You must enter both the source amount and actual received amount; this does *not* fetch an exchange rate automatically.
@@ -91,3 +91,5 @@ Run the migrations **once, in order**, before attempting any account operation. 
 - The complete local workflow is in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 Never put private credentials or a user's `data.json` in GitHub.
+
+The privileged transfer implementation is kept in the non-exposed `coinflow_internal` schema and accessed through an authenticated public invoker RPC. Do not add `coinflow_internal` to the Supabase Data API exposed schemas.

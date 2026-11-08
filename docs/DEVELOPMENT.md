@@ -15,7 +15,7 @@
 - Region: **eu-west-1 (Ireland)**
 - URL: `https://jylvjorhvzmbguxetxxw.supabase.co`
 - Dashboard: https://supabase.com/dashboard/project/jylvjorhvzmbguxetxxw
-- SQL migrations: `001_init`, `002_legacy_import`, `003_financial_operations`, `004_secure_ledger`, applied in order. Do not re-run them on the same database.
+- SQL migrations: `001_init`, `002_legacy_import`, `003_financial_operations`, `004_secure_ledger`, `005_private_operations`, applied in order. Do not re-run them on the same database.
 
 ### Enable local email authentication (dashboard)
 
@@ -56,7 +56,9 @@ For import testing, first use a synthetic CoinFlow 1.0 `data.json` backup (not p
 ## CI / database safety
 
 - Every `dev` push runs TypeScript checks, unit tests, Next.js build and PostgreSQL migration + RLS smoke tests.
-- All four migrations are applied to the CI disposable database in order.
+- All five migrations are applied to the CI disposable database in order.
 - Authenticated clients may insert **manual** transactions, but **cannot** forge operation-linked ledger rows.
-- The `apply_financial_operation` RPC checks auth.uid() and runs with restricted execute grants; grouped records are created atomically.
+- The `apply_financial_operation` public RPC is SECURITY INVOKER, delegates to a restricted internal SECURITY DEFINER implementation that checks auth.uid(), and runs with restricted execute grants; grouped records are created atomically.
 - The development Supabase project and local test users will **not** be used for production.
+
+Do not expose the `coinflow_internal` schema in Supabase Data API settings.

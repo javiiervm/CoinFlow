@@ -56,4 +56,5 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/202611070002_legacy_import.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/202611070003_financial_operations.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/202611080004_secure_ledger.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/202611080005_private_operations.sql
           psql -X -v ON_ERROR_STOP=1 -f tests/sql/financial-smoke.sql
