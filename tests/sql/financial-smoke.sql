@@ -180,7 +180,7 @@ END $$;
 
 -- New 1.0 compatibility: create an expense and its tracker in one atomic RPC.
 SELECT set_config('request.jwt.claim.sub', '11111111-1111-4111-8111-111111111111', false);
-DO $
+DO $$
 DECLARE
   result jsonb;
   v_bank uuid;
@@ -254,7 +254,7 @@ BEGIN
       WHERE id='bbbb0001-0000-4000-8000-000000000001') <> 1 THEN
     RAISE EXCEPTION 'Allowed deletion of protected expense';
   END IF;
-END $;
+END $$;
 
 RESET ROLE;
 SELECT 'CoinFlow PostgreSQL smoke tests passed' AS result;
