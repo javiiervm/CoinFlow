@@ -434,7 +434,7 @@ export function Dashboard() {
           {!expenseDestination && <label className="check-label"><input type="checkbox" name="external"/> {t("External transaction (excluded from global balance)")}</label>}
           {dialog === "expense" && expenseDestination === "__new_tracker__" && <p className="operation-hint">{t("The expense and its tracker will be created together.")}</p>}
           <button className="primary-button" type="submit" disabled={busy}>{busy?t("Saving…"):t("Save transaction")}</button>
-        </form>}}
+        </form>}
       </div></div>}
     </div>
   );
