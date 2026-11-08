@@ -86,6 +86,39 @@ BEGIN
     NULL;
   END;
 
+  -- An authenticated user must not be able to inject a fake transfer,
+  -- either by manufacturing an operation or linking a manual entry to one.
+  BEGIN
+    INSERT INTO public.financial_operations
+      (id,user_id,kind,bank_id,amount,currency,occurred_on,request_payload)
+    VALUES
+      ('aaaa0009-0000-4000-8000-000000000009',
+       '11111111-1111-4111-8111-111111111111',
+       'allocate','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+       500,'EUR',current_date,'{}'::jsonb);
+    RAISE EXCEPTION 'Allowed direct forged financial operation';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
+
+  BEGIN
+    INSERT INTO public.transactions
+      (user_id,concept,type,amount,currency,category,occurred_on,
+       external,operation_id,operation_kind)
+    VALUES
+      ('11111111-1111-4111-8111-111111111111',
+       'Forged transfer','income',999,'EUR','Transfer',current_date,
+       false,'aaaa0001-0000-4000-8000-000000000001','allocate');
+    RAISE EXCEPTION 'Allowed forged linked transaction';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
+
+  IF (SELECT count(*) FROM public.transactions
+      WHERE operation_id='aaaa0001-0000-4000-8000-000000000001') <> 2 THEN
+    RAISE EXCEPTION 'Forged transaction changed transfer count';
+  END IF;
+
   -- RLS protects one side of a multi-row operation against deletion.
   DELETE FROM public.transactions WHERE operation_id='aaaa0001-0000-4000-8000-000000000001';
   IF (SELECT count(*) FROM public.transactions

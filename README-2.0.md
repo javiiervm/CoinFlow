@@ -21,13 +21,10 @@ Open http://localhost:3000. Without Supabase configuration, the app displays **r
 
 To enable accounts and persistent data:
 
-1. Create a Supabase project.
-2. Run `supabase/migrations/202611070001_init.sql` in its SQL editor.
-3. Copy `.env.example` to `.env.local` and fill in the project URL and publishable key.
-4. Run `supabase/migrations/202611070002_legacy_import.sql` in the same SQL editor (required for importing older local data).
-5. Run `supabase/migrations/202611070003_financial_operations.sql` in the SQL editor. It adds atomic ledger operations, idempotency, per-account write serialization and RLS restrictions for linked rows.
-6. In Supabase Auth, enable email registration and configure allowed redirect URLs for `http://localhost:3000/auth/callback` and your eventual production URL.
-7. Restart the dev server and create an account.
+1. Use the existing **CoinFlow 2.0 Dev** Supabase project (EU, separate from future production). See [Development setup](docs/DEVELOPMENT.md).
+2. Copy `.env.example` to an untracked `.env.local` and insert the project's **publishable** key and URL.
+3. Configure Supabase's local Auth site URL and redirect allowlist in the Dashboard.
+4. Install dependencies, run `npm run dev`, and create a **test account**. The four SQL migrations have been applied to the development project; on a new project apply migrations 001–004 in order.
 
 **Never expose service-role or secret keys in client environment variables.**
 
@@ -47,14 +44,14 @@ To enable accounts and persistent data:
 
 ## Important limitations
 
-This is **development software, not a production-ready accounting system**. New atomic transfers, piggybank spending, manual currency exchanges and legacy imports have been implemented, but **not yet tested against a real Supabase project**. Not all 1.0 behaviors have been ported (notably legacy spend-and-archive, historical transaction editing and automatic exchange rates). The demo data are not persisted. Do not use this build as the sole record for real money until database integration tests and deployment hardening are complete.
+This is **development software, not a production-ready accounting system**. New atomic transfers, piggybank spending, manual currency exchanges and legacy imports have been implemented, but **applied to a Supabase development project (with PostgreSQL integration tests; end-to-end authentication still needs manual verification)**. Not all 1.0 behaviors have been ported (notably legacy spend-and-archive, historical transaction editing and automatic exchange rates). The demo data are not persisted. Do not use this build as the sole record for real money until database integration tests and deployment hardening are complete.
 
-For a future public launch, add a password-reset completion view, end-to-end database tests for transfers/imports and concurrent requests, editing/archiving flows, full legacy balance reconciliation, email delivery/domain setup, privacy policy, backup/restore, monitoring, and production deployment checks.
+For a future public launch, add a password-reset completion view, full end-to-end Supabase client tests and concurrent requests, editing/archiving flows, full legacy balance reconciliation, email delivery/domain setup, privacy policy, backup/restore, monitoring, and production deployment checks.
 
 ## Import existing CoinFlow 1.0 data.json
 
 1. In the original app, stop Flask and keep a **backup** of the local `data.json` file. Do not overwrite it. It contains `transactions[]` and `piggybanks[]`.
-2. Set up Supabase and apply **all three SQL migrations in order** (including the 2.0 legacy-import migration). Never put a service-role key in the browser.
+2. Set up Supabase and apply **all four SQL migrations in order** (including the 2.0 legacy-import migration). Never put a service-role key in the browser.
 3. Open CoinFlow 2.0 and sign in or register. Go to **Settings → Import from CoinFlow 1.0** (or **Configuración → Importar desde CoinFlow 1.0**).
 4. Select `data.json` (max 5 MB), review transaction/piggybank counts and **EUR/USD global balances**, and compare them with the totals in the original app.
 5. Click **Import data** only after confirming the preview. The browser uploads data only after confirmation. The source file on disk is never modified.
@@ -73,7 +70,7 @@ The import runs within one PostgreSQL transaction through an authenticated Supab
 
 For Node.js 22 or newer, run `npm test` (or `npm run test:legacy` / `npm run test:finance`) to check data migration and business rules. Run `npm run typecheck` and `npm run build` before publishing. A GitHub Actions workflow on `dev` runs the same checks.
 
-### Financial operations (requires SQL migration 003)
+### Financial operations (requires SQL migrations 003 and 004)
 
 - On **Piggybanks**, use **Add funds** (from available balance or from external funds), **Withdraw** (back to global balance), or **Spend** (record a real expense using funds held in the piggybank).
 - On **Dashboard / Transactions**, use **Exchange** to move money from EUR to USD or vice versa. You must enter both the source amount and actual received amount; this does *not* fetch an exchange rate automatically.
@@ -85,21 +82,12 @@ For Node.js 22 or newer, run `npm test` (or `npm run test:legacy` / `npm run tes
 Run the migrations **once, in order**, before attempting any account operation. Never expose the Supabase service-role key to the browser.
 
 
-## Supabase + Vercel preview setup
+## Deployment model: local development, GitHub main production
 
-**Never import personal finance data into a database until the SQL smoke tests pass.**
-The `dev` branch is still a development preview and must not replace the original local backup.
+- **`dev`**: run locally with `npm run dev`. This branch is **not connected to Vercel** and uses the separate Supabase development project with test accounts.
+- **`main`**: will be connected to a Vercel production project **only after** CoinFlow 2.0 is ready. Merge reviewed and tested `dev` changes into `main`; then Vercel deploys on every `main` push.
+- **Production data**: create a **separate Supabase production project** later. Never reuse development users, test transactions, or development API settings for production.
+- Until the initial release, `main` must keep the existing CoinFlow 1.0 Flask code unchanged. Do not connect the current `main` as a Next.js production project.
+- The complete local workflow is in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
-1. Create a **separate Supabase development project** (not production), preferably in an EU region.
-2. In its SQL Editor run `001_init.sql`, `002_legacy_import.sql`, and `003_financial_operations.sql` **in filename order** from `supabase/migrations/`. Do not apply partial migrations if CI is failing.
-3. In Supabase Authentication enable Email sign-up and email confirmation. Add `http://localhost:3000/auth/callback` and `http://localhost:3000/auth/callback?next=%2Fauth%2Fupdate-password` to the allowed redirect URLs; set the site URL for local testing to `http://localhost:3000`.
-4. Put `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in a local, ignored `.env.local` file. These are *public* client configuration values, not service-role secrets.
-5. **For the first private preview, avoid importing GitHub's `main` directly as a Vercel production deployment:** `main` still contains the legacy Flask app and is not ready for Vercel production. Start with a **Preview-only** deployment from a local checkout of `dev` using `npx vercel` (without `--prod`), or use the connected Vercel integration to deploy `dev` to Preview. Set the framework to **Next.js** and the root directory to `./`. After CoinFlow 2.0 has passed acceptance tests, configure GitHub automatic deployments and the production branch explicitly.
-6. Define both `NEXT_PUBLIC_` variables in Vercel's **Preview** environment (or scoped to `dev`). Vercel injects public values during build, so redeploy after changing them.
-7. Add the generated **exact Preview origin** to Supabase's Auth redirect allowlist, including `/auth/callback` and `/auth/callback?next=%2Fauth%2Fupdate-password`. Do not guess a Vercel URL; obtain it from the actual deployment.
-8. For a recovery link, use **Settings → Forgot password?**. The callback exchanges the one-time code then opens `/auth/update-password`. Email delivery may need a custom SMTP provider for production.
-9. Create two test users and check that each sees only their own data. Import a **copy of a synthetic** 1.0 `data.json` first and compare EUR/USD balances. Only then consider a copy of real data.
-
-Run `npm run typecheck`, `npm test` and `npm run build` locally. GitHub Actions also runs the migrations on a disposable PostgreSQL service with RLS and finance smoke tests on every push to `dev`.
-
-**Never put Supabase database passwords, JWT signing secrets, service-role keys, or personal `data.json` content in GitHub commits or ChatGPT messages.**
+Never put private credentials or a user's `data.json` in GitHub.
