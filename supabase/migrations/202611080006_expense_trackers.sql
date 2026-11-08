@@ -27,7 +27,7 @@ create policy "Users delete manual transactions" on public.transactions
 create or replace function coinflow_internal.enforce_expense_tracker_limits()
 returns trigger
 language plpgsql security definer set search_path=''
-as $
+as $$
 declare
   v_kind text;
   v_goal numeric;
@@ -55,7 +55,7 @@ begin
   end if;
   return new;
 end;
-$;
+$$;
 revoke all on function coinflow_internal.enforce_expense_tracker_limits()
   from public, anon, authenticated;
 drop trigger if exists enforce_expense_tracker_limits on public.transactions;
