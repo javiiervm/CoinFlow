@@ -2,7 +2,7 @@
 
 import { useRef, useState, type FormEvent } from "react";
 import { ArrowLeftRight, ArrowUpRight, CircleAlert, LoaderCircle, X } from "lucide-react";
-import { formatMoney, globalBalance, piggybankBalance } from "@/lib/finance";
+import { formatMoney, globalBalance, piggybankBalance, expenseTrackerRemaining } from "@/lib/finance";
 import { getSupabase } from "@/lib/supabase/client";
 import { translate, type Language, type TranslationKey } from "@/lib/i18n";
 import type { Currency, FinancialAction, Piggybank, Transaction } from "@/lib/models";
@@ -63,6 +63,8 @@ export function FinancialOperationModal({
   const activeCurrency = bank?.currency ?? currency;
   const global = globalBalance(transactions, activeCurrency, piggybanks);
   const bankBalance = bank ? piggybankBalance(bank, transactions) : null;
+  const trackerRemaining = bank?.type === "expense" ? expenseTrackerRemaining(bank, transactions) : null;
+  const exceedsDebt = action === "topup" && trackerRemaining !== null && amount !== "" && Number(amount) > trackerRemaining;
   const exceedsAvailable =
     amount !== "" && Number.isFinite(Number(amount)) &&
     ((action === "exchange" || (action === "topup" && source === "balance"))
@@ -98,6 +100,10 @@ export function FinancialOperationModal({
     const op: FinancialAction = action === "topup"
       ? source === "balance" ? "allocate" : "external_topup"
       : action;
+    if (exceedsDebt) {
+      setError(t("Repayment cannot exceed the remaining debt."));
+      return;
+    }
     if (exceedsAvailable) {
       setError(t("There is not enough money in the selected balance."));
       return;
@@ -184,10 +190,12 @@ export function FinancialOperationModal({
             <span>{action === "withdraw" || action === "spend" ? t("Piggybank balance") : t("Available balance")}</span>
             <strong>{formatMoney(action === "withdraw" || action === "spend" ? bankBalance ?? 0 : global, activeCurrency, language)}</strong>
           </div>
+          {trackerRemaining !== null && <p className="operation-hint">{t("Remaining debt")}: {formatMoney(trackerRemaining,activeCurrency,language)}. {t("Repayments stop when the expense tracker is fully paid.")}</p>}
           {action === "exchange" && <p className="operation-hint">{t("Enter the received amount from your own exchange rate. No automatic conversion is applied.")}</p>}
+          {exceedsDebt && <p className="operation-error"><CircleAlert size={16}/>{t("Repayment cannot exceed the remaining debt.")}</p>}
           {exceedsAvailable && <p className="operation-error"><CircleAlert size={16}/>{t("There is not enough money in the selected balance.")}</p>}
           {error && <p role="alert" className="operation-error"><CircleAlert size={16}/>{error}</p>}
-          <button className="primary-button" type="submit" disabled={busy || exceedsAvailable}>
+          <button className="primary-button" type="submit" disabled={busy || exceedsAvailable || exceedsDebt || trackerRemaining === 0}>
             {busy ? <LoaderCircle className="spin" size={17}/> : <ArrowLeftRight size={17}/>}
             {busy ? t("Saving…") : t("Confirm operation")}
           </button>

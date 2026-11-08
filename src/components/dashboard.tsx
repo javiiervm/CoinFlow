@@ -13,7 +13,7 @@ import {
 } from "recharts";
 import { demoPiggybanksFor, demoTransactionsFor } from "@/lib/demo";
 import { categoryLabel, translate, type Language, type TranslationKey, type Translator } from "@/lib/i18n";
-import { cashflowSeries, formatMoney, globalBalance, monthlySummary, piggybankBalance, piggybankProgress } from "@/lib/finance";
+import { cashflowSeries, formatMoney, globalBalance, monthlySummary, piggybankBalance, piggybankProgress, expenseTrackerCompleted, expenseTrackerRemaining, newestFirst } from "@/lib/finance";
 import { getSupabase, supabaseConfigured } from "@/lib/supabase/client";
 import { LegacyImporter } from "@/components/legacy-importer";
 import { FinancialOperationModal, type OperationView } from "@/components/financial-operation-modal";
@@ -61,6 +61,7 @@ export function Dashboard() {
   const [transactions, setTransactions] = useState<Transaction[]>(() => demoTransactionsFor("en"));
   const [piggybanks, setPiggybanks] = useState<Piggybank[]>(() => demoPiggybanksFor("en"));
   const [dialog, setDialog] = useState<Dialog>(null);
+  const [expenseDestination, setExpenseDestination] = useState("");
   const [operation, setOperation] = useState<{action: OperationView; bankId?: string} | null>(null);
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [authMessage, setAuthMessage] = useState("");
@@ -99,7 +100,7 @@ export function Dashboard() {
     const api = getSupabase();
     if (!api) return;
     const [tx, banks] = await Promise.all([
-      api.from("transactions").select("*").eq("user_id", owner).order("occurred_on", { ascending: false }),
+      api.from("transactions").select("*").eq("user_id", owner).order("occurred_on", { ascending: false }).order("created_at", { ascending: false }),
       api.from("piggybanks").select("*").eq("user_id", owner).order("created_at", { ascending: false })
     ]);
     if (tx.error || banks.error) {
@@ -137,7 +138,7 @@ export function Dashboard() {
     .filter(t => t.currency === currency)
     .filter(t => kindFilter === "all" || t.type === kindFilter)
     .filter(t => t.concept.toLowerCase().includes(search.toLowerCase()) || categoryLabel(t.category,language).toLowerCase().includes(search.toLowerCase()))
-    .sort((a,b) => b.occurred_on.localeCompare(a.occurred_on)), [transactions, currency, search, kindFilter, language]);
+    .sort(newestFirst), [transactions, currency, search, kindFilter, language]);
   const visibleBanks = useMemo(() => piggybanks.filter(b => b.currency === currency), [piggybanks, currency]);
   const bankTotals = useMemo(() => visibleBanks.reduce((s, b) => s + piggybankBalance(b, transactions), 0), [visibleBanks, transactions]);
 
@@ -172,31 +173,84 @@ export function Dashboard() {
 
   async function addTransaction(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!user || !server || !dialog || dialog === "piggybank") return;
+    if (!user || !server || !dialog || dialog === "piggybank" || busy) return;
     const form = new FormData(event.currentTarget);
     const amount = numberFrom(form.get("amount"));
-    if (!Number.isFinite(amount) || amount <= 0) { setNotice(t("Enter an amount greater than zero.")); return; }
-    const bankId = String(form.get("piggybank_id") || "") || null;
-    const bank = piggybanks.find(b => b.id === bankId);
-    if (bank && bank.currency !== currency) { setNotice(t("The piggybank and transaction must use the same currency.")); return; }
-    const row: NewTransaction = {
-      user_id: user.id,
-      concept: String(form.get("concept") || "").trim(),
-      amount,
-      type: dialog,
-      currency,
-      category: String(form.get("category") || "General"),
-      occurred_on: String(form.get("occurred_on") || today()),
-      piggybank_id: bankId,
-      external: form.get("external") === "on"
-    };
-    if (!row.concept) return;
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setNotice(t("Enter an amount greater than zero.")); return;
+    }
+    const destination = String(form.get("piggybank_id") || "");
+    const newTracker = dialog === "expense" && destination === "__new_tracker__";
+    const bank = piggybanks.find(b => b.id === destination);
+    if (destination && !newTracker && !bank) {
+      setNotice(t("Piggybank not found.")); return;
+    }
+    if (bank && bank.currency !== currency) {
+      setNotice(t("The piggybank and transaction must use the same currency.")); return;
+    }
+    const concept = String(form.get("concept") || "").trim();
+    const date = String(form.get("occurred_on") || today());
+    const category = String(form.get("category") || "General");
+    const external = form.get("external") === "on";
+    if (!concept) return;
+    if (newTracker && external) {
+      setNotice(t("An external expense cannot create a piggybank.")); return;
+    }
+    const trackerName = String(form.get("new_tracker_name") || "").trim();
+    if (newTracker && !trackerName) {
+      setNotice(t("Enter a name for the new expense tracker.")); return;
+    }
+    if (bank?.type === "expense" && dialog === "income" && expenseTrackerCompleted(bank, transactions)) {
+      setNotice(t("This expense tracker is already paid off.")); return;
+    }
+
     setBusy(true);
-    const { error } = await server.from("transactions").insert(row);
-    setBusy(false);
-    if (error) { setNotice(error.message); return; }
-    setDialog(null); setNotice(t("Transaction saved."));
-    await refresh(user.id);
+    try {
+      if (newTracker || (bank?.type === "expense" && dialog === "expense")) {
+        if (external) throw new Error(t("An external expense cannot create a piggybank."));
+        const { error } = await server.rpc("record_expense_with_tracker", {
+          p_request_id: crypto.randomUUID(),
+          p_concept: concept,
+          p_amount: amount,
+          p_currency: currency,
+          p_occurred_on: date,
+          p_category: category,
+          p_new_name: newTracker ? trackerName : null,
+          p_existing_bank_id: newTracker ? null : bank!.id
+        });
+        if (error) throw error;
+      } else if (bank) {
+        if (dialog === "expense" && external) throw new Error(t("External expenses must use the global balance."));
+        const { error } = await server.rpc("apply_financial_operation", {
+          p_request_id: crypto.randomUUID(),
+          p_action: dialog === "expense" ? "spend" : external ? "external_topup" : "allocate",
+          p_amount: amount,
+          p_bank_id: bank.id,
+          p_currency: currency,
+          p_target_currency: null,
+          p_target_amount: null,
+          p_note: concept,
+          p_date: date
+        });
+        if (error) throw error;
+      } else {
+        const row: NewTransaction = {
+          user_id: user.id, concept, amount,
+          type: dialog, currency, category,
+          occurred_on: date, piggybank_id: null, external
+        };
+        const { error } = await server.from("transactions").insert(row);
+        if (error) throw error;
+      }
+      setDialog(null);
+      setExpenseDestination("");
+      setNotice(t("Transaction saved."));
+      await refresh(user.id);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : t("Request failed."));
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function addPiggybank(event: React.FormEvent<HTMLFormElement>) {
@@ -279,12 +333,13 @@ export function Dashboard() {
         <main className="main-content">
           {!authReady && <div className="notice"><LoaderCircle size={17} className="spin"/> {t("Checking session…")}</div>}
           {demo && <div className="demo-banner"><div><Sparkles size={17}/><span><strong>{t("Demo mode")}.</strong> {t("Sample data only. Changes are disabled.")}</span></div><button onClick={() => { setPage("settings"); setAuthMode("register"); }}>{t("Create account")} <ArrowRight size={15}/></button></div>}
-          {notice && <div className="notice" role="status"><span>{notice}</span><button aria-label="Cerrar aviso" onClick={() => setNotice("")}><X size={16}/></button></div>}
+          {notice && <div className="notice" role="status"><span>{notice}</span><button aria-label={t("Close")} onClick={() => setNotice("")}><X size={16}/></button></div>}
 
           {page === "overview" && <>
             <div className="page-heading"><div><h1>{t("Dashboard")}</h1><p>{t("Balances and recent activity.")}</p></div><div className="heading-actions">
   <button className="outline-button" onClick={() => setOperation({action:"exchange"})} disabled={demo}><ArrowLeftRight size={17}/> {t("Exchange")}</button>
-  <button className="primary-button" onClick={() => setDialog("income")} disabled={demo}><Plus size={18}/> {t("New transaction")}</button>
+  <button className="outline-button" onClick={() => {setDialog("income");setExpenseDestination("");}} disabled={demo}><ArrowDownLeft size={17}/> {t("Add income")}</button>
+  <button className="primary-button" onClick={() => {setDialog("expense");setExpenseDestination("");}} disabled={demo}><Plus size={18}/> {t("Add expense")}</button>
 </div></div>
             <div className="metrics-grid">
               <Metric language={language} label={t("Available balance")} amount={balance} currency={currency} icon={Wallet} tone="blue" note={t("Global balance (excluding piggybanks)")} />
@@ -307,20 +362,20 @@ export function Dashboard() {
           </>}
 
           {page === "transactions" && <>
-            <div className="page-heading"><div><h1>{t("Transactions")}</h1><p>{t("All transactions, including piggybank activity.")}</p></div><div className="heading-actions"><button className="outline-button" onClick={() => setOperation({action:"exchange"})} disabled={demo}><ArrowLeftRight size={17}/> {t("Exchange")}</button><button className="outline-button" onClick={downloadCSV}><Download size={17}/> {t("Export CSV")}</button><button className="primary-button" disabled={demo} onClick={() => setDialog("expense")}><Plus size={18}/> {t("Add expense")}</button></div></div>
-            <section className="panel"><div className="filter-row"><label className="search-input"><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder={t("Search concept or category")} /></label><select className="select-control" value={kindFilter} onChange={e=>setKindFilter(e.target.value as typeof kindFilter)} aria-label={t("Transaction type")}><option value="all">{t("All transactions")}</option><option value="income">{t("Income")}</option><option value="expense">{t("Expenses")}</option></select><button className="outline-button" onClick={() => setDialog("income")} disabled={demo}><Plus size={16}/> {t("Add income")}</button></div><TransactionList language={language} transactions={visibleTransactions} currency={currency} onDelete={demo ? undefined : deleteTransaction}/></section>
+            <div className="page-heading"><div><h1>{t("Transactions")}</h1><p>{t("All transactions, including piggybank activity.")}</p></div><div className="heading-actions"><button className="outline-button" onClick={() => setOperation({action:"exchange"})} disabled={demo}><ArrowLeftRight size={17}/> {t("Exchange")}</button><button className="outline-button" onClick={downloadCSV}><Download size={17}/> {t("Export CSV")}</button><button className="primary-button" disabled={demo} onClick={() => {setDialog("expense");setExpenseDestination("");}}><Plus size={18}/> {t("Add expense")}</button></div></div>
+            <section className="panel"><div className="filter-row"><label className="search-input"><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder={t("Search concept or category")} /></label><select className="select-control" value={kindFilter} onChange={e=>setKindFilter(e.target.value as typeof kindFilter)} aria-label={t("Transaction type")}><option value="all">{t("All transactions")}</option><option value="income">{t("Income")}</option><option value="expense">{t("Expenses")}</option></select><button className="outline-button" onClick={() => {setDialog("income");setExpenseDestination("");}} disabled={demo}><Plus size={16}/> {t("Add income")}</button></div><TransactionList language={language} transactions={visibleTransactions} currency={currency} onDelete={demo ? undefined : deleteTransaction}/></section>
           </>}
 
           {page === "piggybanks" && <>
             <div className="page-heading"><div><h1>{t("Piggybanks")}</h1><p>{t("Balances and targets for each piggybank.")}</p></div><button className="primary-button" onClick={() => setDialog("piggybank")} disabled={demo}><Plus size={18}/> {t("New piggybank")}</button></div>
-            <div className="bank-grid">{visibleBanks.map(bank => <div key={bank.id} className={`panel bank-card bank-card-${bank.type}`}><div className="bank-card-top"><div className={`bank-icon bank-icon-${bank.type}`}>{bank.type === "budget" ? <Wallet size={20}/> : bank.type === "expense" ? <TrendingDown size={20}/> : <PiggyBank size={20}/>}</div><span className={`category-pill type-pill type-pill-${bank.type}`}>{bank.type === "budget" ? t("Budget") : bank.type === "expense" ? t("Expense") : t("Saving")}</span></div><h2>{bank.name}</h2><BankProgress bank={bank} transactions={transactions} language={language} expanded/><div className="bank-actions">
-    <button type="button" disabled={demo} className="bank-action-button bank-action-primary" onClick={() => setOperation({action:"topup",bankId:bank.id})}>{t("Add funds")}</button>
+            <div className="bank-grid">{visibleBanks.map(bank => <div key={bank.id} className={`panel bank-card bank-card-${bank.type}`}><div className="bank-card-top"><div className={`bank-icon bank-icon-${bank.type}`}>{bank.type === "budget" ? <Wallet size={20}/> : bank.type === "expense" ? <TrendingDown size={20}/> : <PiggyBank size={20}/>}</div><span className={`category-pill type-pill type-pill-${bank.type}`}>{bank.type === "budget" ? t("Budget") : bank.type === "expense" ? t("Expense") : t("Saving")}</span></div><h2>{bank.name}</h2><BankProgress bank={bank} transactions={transactions} language={language} expanded/>{bank.type === "expense" && expenseTrackerCompleted(bank,transactions) && <div className="bank-completed"><CheckCircle2 size={16}/>{t("Paid off")}</div>}<div className="bank-actions">
+    <button type="button" disabled={demo || (bank.type === "expense" && expenseTrackerCompleted(bank,transactions))} className="bank-action-button bank-action-primary" onClick={() => setOperation({action:"topup",bankId:bank.id})}>{t("Add funds")}</button>
     {bank.type !== "expense" && <>
       <button type="button" disabled={demo || piggybankBalance(bank, transactions) <= 0} className="bank-action-button" onClick={() => setOperation({action:"withdraw",bankId:bank.id})}>{t("Withdraw")}</button>
       <button type="button" disabled={demo || piggybankBalance(bank, transactions) <= 0} className="bank-action-button" onClick={() => setOperation({action:"spend",bankId:bank.id})}>{t("Spend")}</button>
     </>}
   </div><div className="bank-card-footer"><span>{t("Target:")} {formatMoney(bank.goal, bank.currency,language)}</span>{!demo && <button className="icon-button danger" onClick={() => void deletePiggybank(bank.id)} disabled={transactions.some(row => row.piggybank_id === bank.id)} title={transactions.some(row => row.piggybank_id === bank.id) ? t("Piggybanks with transaction history cannot be deleted yet.") : t("Delete piggybank")} aria-label={t("Delete piggybank {name}",{name:bank.name})}><Trash2 size={17}/></button>}</div></div>)}{visibleBanks.length === 0 && <div className="panel empty-panel">{t("No piggybanks in {currency}.",{currency})}</div>}</div>
-            <div className="info-note"><CircleHelp size={18}/><span>{t("Advanced piggybank transfers from CoinFlow 1.0 are not available in this preview. Do not use this build for real accounting.")}</span></div>
+            <div className="info-note"><CircleHelp size={18}/><span>{t("Development account: use test data only. Keep a backup of CoinFlow 1.0 before importing.")}</span></div>
           </>}
 
           {page === "analytics" && <>
@@ -361,7 +416,25 @@ export function Dashboard() {
       />}
       {dialog && <div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setDialog(null);}}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div className="modal-heading"><div><span className="eyebrow">{t("NEW")}</span><h2 id="modal-title">{dialog==="piggybank"?t("Create piggybank"):dialog==="income"?t("Add income"):t("Add expense")}</h2></div><button className="icon-button" aria-label={t("Close")} onClick={()=>setDialog(null)}><X size={20}/></button></div>
         {dialog==="piggybank" ? <form className="form-stack" onSubmit={addPiggybank}><label>{t("Piggybank name")}<input name="name" placeholder={t("e.g. Holidays")} required maxLength={120}/></label><label>{t("Type")}<select name="type"><option value="savings">{t("Saving")}</option><option value="budget">{t("Budget")}</option><option value="expense">{t("Expense tracker")}</option></select></label><label>{t("Goal ({currency})",{currency})}<input name="goal" type="number" min="0" step="0.01" defaultValue="0" required/></label><button className="primary-button" type="submit" disabled={busy}>{busy?t("Creating…"):t("Create piggybank")}</button></form> :
-        <form className="form-stack" onSubmit={addTransaction}><label>{t("Concept")}<input name="concept" placeholder={dialog==="income"?t("e.g. Salary"):t("e.g. Groceries")} required maxLength={180}/></label><div className="form-pair"><label>{t("Amount ({currency})",{currency})}<input name="amount" type="number" min="0.01" step="0.01" required placeholder={language === "es" ? "0,00" : "0.00"}/></label><label>{t("Date")}<input name="occurred_on" type="date" defaultValue={today()} required/></label></div><label>{t("Category")}<select name="category">{categories.map(c=><option key={c} value={c}>{categoryLabel(c,language)}</option>)}</select></label><label>{t("Source / destination")}<select name="piggybank_id"><option value="">{t("Global balance")}</option>{visibleBanks.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label><label className="check-label"><input type="checkbox" name="external"/> {t("External transaction (excluded from global balance)")}</label><button className="primary-button" type="submit" disabled={busy}>{busy?t("Saving…"):t("Save transaction")}</button></form>}
+        <form className="form-stack" onSubmit={addTransaction}>
+          <label>{t("Concept")}<input name="concept" placeholder={dialog==="income"?t("e.g. Salary"):t("e.g. Groceries")} required maxLength={180}/></label>
+          <div className="form-pair">
+            <label>{t("Amount ({currency})",{currency})}<input name="amount" type="number" min="0.01" step="0.01" required placeholder="0.00"/></label>
+            <label>{t("Date")}<input name="occurred_on" type="date" defaultValue={today()} required/></label>
+          </div>
+          <label>{t("Category")}<select name="category">{categories.map(c=><option key={c} value={c}>{categoryLabel(c,language)}</option>)}</select></label>
+          <label>{t("Source / destination")}
+            <select name="piggybank_id" value={expenseDestination} onChange={e=>setExpenseDestination(e.target.value)}>
+              <option value="">{t("Global balance")}</option>
+              {visibleBanks.filter(b=>dialog === "expense" || b.type !== "expense" || !expenseTrackerCompleted(b,transactions)).map(b=><option key={b.id} value={b.id}>{b.name} ({b.type === "expense" ? t("Expense tracker") : b.type === "budget" ? t("Budget") : t("Saving")})</option>)}
+              {dialog === "expense" && <option value="__new_tracker__">{t("Create expense tracker from this expense")}</option>}
+            </select>
+          </label>
+          {dialog === "expense" && expenseDestination === "__new_tracker__" && <label>{t("New expense tracker name")}<input name="new_tracker_name" placeholder={t("e.g. Unpaid purchase")} maxLength={120} required/></label>}
+          {!expenseDestination && <label className="check-label"><input type="checkbox" name="external"/> {t("External transaction (excluded from global balance)")}</label>}
+          {dialog === "expense" && expenseDestination === "__new_tracker__" && <p className="operation-hint">{t("The expense and its tracker will be created together.")}</p>}
+          <button className="primary-button" type="submit" disabled={busy}>{busy?t("Saving…"):t("Save transaction")}</button>
+        </form>}}
       </div></div>}
     </div>
   );
@@ -378,7 +451,7 @@ function CashflowChart({series,currency,language}: {series:ReturnType<typeof cas
 function BankProgress({bank,transactions,language,expanded=false}: {bank:Piggybank;transactions:Transaction[];language:Language;expanded?:boolean}) {
   const balance = piggybankBalance(bank,transactions);
   const progress = piggybankProgress(bank,transactions);
-  return <div className={expanded?"bank-progress expanded":"bank-progress"}><div className="bank-progress-top">{!expanded && <div className="bank-progress-name"><i className={`bank-type-dot bank-type-dot-${bank.type}`} aria-hidden="true"/><strong>{bank.name}</strong></div>}<span>{formatMoney(balance,bank.currency,language)}</span></div><div className="progress-track"><div className={`progress-fill progress-fill-${bank.type}`} style={{width:`${progress}%`}}/></div><div className="progress-caption"><span>{translate(language,bank.type==="budget"?"Current budget balance":bank.type==="expense"?"Expense balance":"Savings goal")}</span><span>{bank.type==="budget"?translate(language,"Available"):`${Math.round(progress)}%`}</span></div></div>;
+  return <div className={expanded?"bank-progress expanded":"bank-progress"}><div className="bank-progress-top">{!expanded && <div className="bank-progress-name"><i className={`bank-type-dot bank-type-dot-${bank.type}`} aria-hidden="true"/><strong>{bank.name}</strong></div>}<span>{formatMoney(bank.type === "expense" ? expenseTrackerRemaining(bank,transactions) : balance,bank.currency,language)}</span></div><div className="progress-track"><div className={`progress-fill progress-fill-${bank.type}`} style={{width:`${progress}%`}}/></div><div className="progress-caption"><span>{bank.type === "expense" && expenseTrackerCompleted(bank,transactions) ? translate(language,"Paid off") : translate(language,bank.type==="budget"?"Current budget balance":bank.type==="expense"?"Remaining debt":"Savings goal")}</span><span>{bank.type==="budget" && bank.goal<=0 ? translate(language,"No target") : `${Math.round(progress)}%`}</span></div></div>;
 }
 
 function TransactionList({transactions,currency,language,onDelete}: {transactions:Transaction[];currency:Currency;language:Language;onDelete?: (id:string)=>void}) {

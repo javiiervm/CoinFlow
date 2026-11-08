@@ -69,11 +69,34 @@ export function cashflowSeries(transactions: Transaction[], currency: Currency, 
 
 export function piggybankProgress(bank: Piggybank, transactions: Transaction[]): number {
   const current = piggybankBalance(bank, transactions);
-  if (bank.type === "budget") return 100;
   if (bank.goal <= 0) return 0;
+  // Budget progress measures remaining funds against the optional target.
+  // Expense progress measures debt repaid; completion never exceeds 100%.
   const progress = bank.type === "expense"
     ? transactions.filter(t => t.piggybank_id === bank.id && t.currency === bank.currency && t.type === "income")
       .reduce((sum, t) => sum + t.amount, 0)
     : current;
   return Math.max(0, Math.min(100, progress / bank.goal * 100));
+}
+
+/** An expense tracker is paid when its original debt has been covered. */
+export function expenseTrackerCompleted(bank: Piggybank, transactions: Transaction[]): boolean {
+  return bank.type === "expense" && bank.goal > 0 && expenseTrackerRemaining(bank, transactions) === 0;
+}
+
+/** Remaining unpaid debt in an expense tracker (rounded to cents). */
+export function expenseTrackerRemaining(bank: Piggybank, transactions: Transaction[]): number {
+  if (bank.type !== "expense") return 0;
+  const contributed = transactions.filter(t => t.piggybank_id === bank.id && t.currency === bank.currency && t.type === "income")
+    .reduce((sum, t) => sum + t.amount, 0);
+  return Math.max(0, Math.round((bank.goal - contributed) * 100) / 100);
+}
+
+/** Sort by actual recorded time, newest first; stable tie breaker for legacy records. */
+export function newestFirst(a: Transaction, b: Transaction): number {
+  const byDay = b.occurred_on.localeCompare(a.occurred_on);
+  if (byDay !== 0) return byDay;
+  const recordedA = typeof a.legacy_record?.timestamp === "string" ? a.legacy_record.timestamp : a.created_at || "";
+  const recordedB = typeof b.legacy_record?.timestamp === "string" ? b.legacy_record.timestamp : b.created_at || "";
+  return recordedB.localeCompare(recordedA) || b.id.localeCompare(a.id);
 }

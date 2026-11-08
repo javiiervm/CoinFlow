@@ -93,3 +93,17 @@ Run the migrations **once, in order**, before attempting any account operation. 
 Never put private credentials or a user's `data.json` in GitHub.
 
 The privileged transfer implementation is kept in the non-exposed `coinflow_internal` schema and accessed through an authenticated public invoker RPC. Do not add `coinflow_internal` to the Supabase Data API exposed schemas.
+
+## CoinFlow 1.0 functionality-parity checks (dev)
+
+- **Transactions:** newest first, ordered by transaction date and recorded timestamp within a day. The dashboard offers both income and expense creation.
+- **Savings piggybanks:** progress uses remaining funds relative to the goal. The original over-goal amount is reflected in the global balance.
+- **Budget piggybanks:** progress is the **remaining budget / goal** when a goal is configured. If the goal is zero (the original 1.0 convention), no percentage target is shown.
+- **Expense trackers:** creating an expense may create a linked tracker atomically. Additional expenses on the same tracker increase debt. Repayments are limited to the outstanding goal and a fully paid tracker stays visible with a **Paid off** status. Existing imported historical overpayments are preserved, not changed.
+- **Internal transfers:** use atomic PostgreSQL operations for deposits, withdrawals and spending. A transfer is not earned income or an additional expense.
+- **Exchange:** manual amounts between EUR and USD remain available.
+- **Legacy data:** import retains original records; do not import private financial data until you have verified balances against CoinFlow 1.0.
+
+**Not yet feature-complete:** CoinFlow 1.0's archive/delete-with-reconciliation for existing piggybanks, transaction editing and historical transaction filter/sort options, and automatic online exchange-rate lookup remain pending. Deleting a piggybank with transaction history is intentionally blocked instead of silently rewriting historic balances. The legacy monthly reporting is not yet fully reconciled. These gaps will be addressed before releasing `main`.
+
+Migration `202611080006_expense_trackers.sql` is required for the new expense-tracker RPC and repayment safeguards. Only apply to Supabase Dev after GitHub CI passes.

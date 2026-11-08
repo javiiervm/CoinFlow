@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { globalBalance, piggybankBalance, monthlySummary, cashflowSeries } from "../src/lib/finance.ts";
+import { globalBalance, piggybankBalance, monthlySummary, cashflowSeries, piggybankProgress, expenseTrackerCompleted, expenseTrackerRemaining, newestFirst } from "../src/lib/finance.ts";
 
 const user = "account";
 const date = new Date();
@@ -113,4 +113,31 @@ test("SQL migration protects grouped operations and requires authentication", ()
   assert.match(sql,/insufficient_global_balance/);
   assert.match(sql,/insufficient_piggybank_balance/);
   assert.match(sql,/already_applied/);
+});
+
+test("budget progress uses remaining balance relative to target", () => {
+  const plan={...budget,goal:50};
+  assert.equal(piggybankProgress(plan,[t("balance","income",25,"EUR","budget")]),50);
+  assert.equal(piggybankProgress({...budget,goal:0},[t("balance","income",25,"EUR","budget")]),0);
+  assert.equal(piggybankProgress(plan,[t("balance","income",75,"EUR","budget")]),100);
+});
+
+test("an expense tracker completes at its goal and caps displayed progress", () => {
+  const opened=[t("expense","expense",50,"EUR","debt")];
+  assert.equal(expenseTrackerCompleted(debt,opened),false);
+  assert.equal(expenseTrackerRemaining(debt,opened),50);
+  const partial=[...opened,t("payment","income",20,"EUR","debt")];
+  assert.equal(expenseTrackerRemaining(debt,partial),30);
+  assert.equal(piggybankProgress(debt,partial),40);
+  const paid=[...opened,t("payment","income",50,"EUR","debt")];
+  assert.equal(expenseTrackerCompleted(debt,paid),true);
+  assert.equal(expenseTrackerRemaining(debt,paid),0);
+  assert.equal(piggybankProgress(debt,paid),100);
+});
+
+test("transactions sort by date then real creation timestamp, newest first", () => {
+  const older={...t("older","expense",5),occurred_on:"2026-10-20",created_at:"2026-10-20T10:00:00Z"};
+  const newer={...t("newer","expense",6),occurred_on:"2026-10-20",created_at:"2026-10-20T17:00:00Z"};
+  const oldest={...t("oldest","expense",1),occurred_on:"2026-10-19",created_at:"2026-10-19T20:00:00Z"};
+  assert.deepEqual([older,oldest,newer].sort(newestFirst).map(x=>x.id),["newer","older","oldest"]);
 });

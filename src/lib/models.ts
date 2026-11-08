@@ -19,6 +19,7 @@ export interface Transaction {
   legacy_record?: Record<string, unknown> | null;
   operation_id?: string | null;
   operation_kind?: FinancialAction | null;
+  tracker_expense?: boolean;
 }
 
 export interface Piggybank {

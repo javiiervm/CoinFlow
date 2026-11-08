@@ -177,5 +177,84 @@ BEGIN
   END IF;
 END $$;
 
+
+-- New 1.0 compatibility: create an expense and its tracker in one atomic RPC.
+SELECT set_config('request.jwt.claim.sub', '11111111-1111-4111-8111-111111111111', false);
+DO $
+DECLARE
+  result jsonb;
+  v_bank uuid;
+BEGIN
+  result := public.record_expense_with_tracker(
+    'bbbb0001-0000-4000-8000-000000000001',
+    'Phone repair', 40, 'EUR', current_date, 'General', 'Phone repair', null);
+  IF result->>'status' <> 'applied' THEN RAISE EXCEPTION 'Expense tracker creation failed'; END IF;
+  v_bank := (result->>'bank_id')::uuid;
+
+  IF (SELECT goal FROM public.piggybanks WHERE id=v_bank) <> 40 THEN
+    RAISE EXCEPTION 'Initial expense tracker goal must equal expense';
+  END IF;
+  IF (SELECT count(*) FROM public.transactions
+    WHERE piggybank_id=v_bank AND type='expense' AND tracker_expense) <> 1 THEN
+    RAISE EXCEPTION 'Initial expense missing or unprotected';
+  END IF;
+
+  result := public.record_expense_with_tracker(
+    'bbbb0001-0000-4000-8000-000000000001',
+    'Phone repair', 40, 'EUR', current_date, 'General', 'Phone repair', null);
+  IF result->>'status' <> 'already_applied' THEN
+    RAISE EXCEPTION 'Expense RPC retry was not idempotent';
+  END IF;
+
+  -- Adding another expense to the same tracker increases the debt.
+  result := public.record_expense_with_tracker(
+    'bbbb0002-0000-4000-8000-000000000002',
+    'Parts', 10, 'EUR', current_date, 'General', null, v_bank);
+  IF (SELECT goal FROM public.piggybanks WHERE id=v_bank) <> 50 THEN
+    RAISE EXCEPTION 'Additional expense did not increase goal';
+  END IF;
+
+  -- Exact repayment is accepted; overpayment or further topups are rejected.
+  result := public.apply_financial_operation(
+    'bbbb0003-0000-4000-8000-000000000003','external_topup',50,
+    v_bank,'EUR');
+  IF result->>'status' <> 'applied' THEN RAISE EXCEPTION 'Exact repayment failed'; END IF;
+  BEGIN
+    PERFORM public.apply_financial_operation(
+      'bbbb0004-0000-4000-8000-000000000004','external_topup',1,
+      v_bank,'EUR');
+    RAISE EXCEPTION 'Accepted overpayment of completed tracker';
+  EXCEPTION WHEN SQLSTATE '22023' THEN NULL;
+  END;
+
+  BEGIN
+    INSERT INTO public.transactions
+      (user_id,concept,type,amount,currency,category,occurred_on,piggybank_id,external)
+    VALUES
+      ('11111111-1111-4111-8111-111111111111',
+       'Forged direct topup','income',1,'EUR','General',current_date,v_bank,true);
+    RAISE EXCEPTION 'Allowed direct overpayment through transactions table';
+  EXCEPTION WHEN SQLSTATE '22023' THEN NULL;
+  END;
+
+  -- A manual expense is not allowed to mutate a tracker without updating debt.
+  BEGIN
+    INSERT INTO public.transactions
+      (user_id,concept,type,amount,currency,category,occurred_on,piggybank_id,external)
+    VALUES
+      ('11111111-1111-4111-8111-111111111111',
+       'Untracked expense','expense',2,'EUR','General',current_date,v_bank,false);
+    RAISE EXCEPTION 'Allowed a tracker expense without goal increase';
+  EXCEPTION WHEN SQLSTATE '22023' THEN NULL;
+  END;
+
+  -- A normal user may not delete the source expense of the tracker.
+  DELETE FROM public.transactions WHERE id='bbbb0001-0000-4000-8000-000000000001';
+  IF (SELECT count(*) FROM public.transactions
+      WHERE id='bbbb0001-0000-4000-8000-000000000001') <> 1 THEN
+    RAISE EXCEPTION 'Allowed deletion of protected expense';
+  END IF;
+END $;
+
 RESET ROLE;
 SELECT 'CoinFlow PostgreSQL smoke tests passed' AS result;

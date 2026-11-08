@@ -493,3 +493,18 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   text-decoration:none; font-weight:650; font-size:13px; margin-top:26px; }
 .password-back:hover { color:var(--text); }
 .password-success { display:flex; gap:10px; align-items:center; color:var(--green); font-size:14px; }
+
+/* Completed debt trackers stay visible and retain their transaction history. */
+.bank-completed {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--bank-savings);
+  background: var(--bank-savings-fill);
+  border: 1px solid var(--bank-savings-line);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 750;
+  margin-top: 16px;
+  padding: 7px 10px;
+}
